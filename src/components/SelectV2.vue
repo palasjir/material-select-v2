@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { v4 } from "uuid";
-import { ref, watch, nextTick, onMounted, computed } from "vue";
+import {ref, watch, nextTick, onMounted, computed, onBeforeUnmount, provide} from "vue";
 import SelectV2Chip from "./SelectV2Chip.vue";
+import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -9,10 +10,12 @@ const props = withDefaults(
     multiple?: boolean;
     searchEnabled?: boolean;
     items: any[];
+    variant: string;
   }>(),
   {
     id: () => `select-${v4()}`,
     multiple: false,
+    variant: "underlined",
   }
 );
 
@@ -27,7 +30,13 @@ const bound = ref(0);
 const search = ref("");
 const active = ref(0);
 const selectedItemsSet = ref(new Set());
-const overflowingChips = ref(new Set());
+
+type OverflowingChipApi = {
+   check(): void;
+}
+
+const registeredChips = new Map<number, OverflowingChipApi>();
+const overflowingChips = ref(new Set<number>());
 
 const filteredItems = computed(() => {
   const searchValue = search.value.toLocaleLowerCase();
@@ -99,9 +108,10 @@ const handleChipOverflow = ({ id, isOverflowing }) => {
   if (isOverflowing) {
     overflowingChips.value.add(id);
   } else {
-    console.log("delete", id);
+    console.log("delete", id, overflowingChips.value);
     overflowingChips.value.delete(id);
   }
+  console.log('overflowing', overflowingChips.value.size);
 };
 
 const removeSelectedItem = (selectedItem) => {
@@ -137,13 +147,56 @@ watch(active, (value) => {
   el.scrollIntoView({ block: "nearest" });
 });
 
+let observer: ResizeObserver | undefined;
+
+const updateDimensions = (el: HTMLElement) => {
+  const rect = el.getBoundingClientRect();
+  width.value = rect.width;
+  bound.value = rect.right;
+}
+
+const updateOverflowingChips = () => {
+  requestAnimationFrame(() => {
+    for (const [_, value] of registeredChips) {
+      value.check();
+    }
+  })
+}
+
 onMounted(() => {
-  if (selectRef.value) {
-    const rect = selectRef.value.$el.getBoundingClientRect();
-    width.value = rect.width;
-    bound.value = rect.right;
+  const el = selectRef.value?.$el as HTMLElement | undefined;
+  if (el) {
+    updateDimensions(el);
+
+    const observer = new ResizeObserver(() => {
+      updateDimensions(el);
+      updateOverflowingChips();
+    });
+    observer.observe(el);
   }
 });
+
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  observer = undefined
+})
+
+const registerChip = ({id, api}: {id: number, api: OverflowingChipApi}) => {
+  console.log('register chip', id);
+  registeredChips.set(id, api);
+};
+
+const unregisterChip = ({id}: {id: number}) => {
+  console.log('unregister chip', id);
+  registeredChips.delete(id);
+  updateOverflowingChips();
+};
+
+provide('select-v2', {
+   registerChip,
+   unregisterChip
+});
+
 </script>
 
 <template>
@@ -161,10 +214,10 @@ onMounted(() => {
       @click.prevent.stop="openPopup"
       @keydown="selectKeyDown"
       @keyup.prevent.stop
-      density="default"
+      density="comfortable"
       closable-chips
       color="primary"
-      variant="underlined"
+      :variant="variant"
       :focused="open"
     >
       <template #chip="{ index, item, props: chipProps }">
@@ -177,29 +230,12 @@ onMounted(() => {
         />
       </template>
       <template #append-inner>
-        <v-menu :close-on-content-click="false" open-on-hover transition="none">
-          <template #activator="{ props: activatorProps }">
-            <div>
-              <v-chip
-                v-if="overflowingChips.size"
-                variant="tonal"
-                color="primary"
-                v-bind="activatorProps"
-                >+{{ overflowingChips.size }}</v-chip
-              >
-            </div>
-          </template>
-
-          <v-sheet class="d-flex flex-wrap ga-2 pa-4">
-            <v-chip
-              v-for="selectedItem in selectedItems"
-              closable
-              @click:close="removeSelectedItem(selectedItem)"
-            >
-              {{ selectedItem.title }}
-            </v-chip>
-          </v-sheet>
-        </v-menu>
+        <SelectV2MoreChipsMenu
+            :count="overflowingChips.size"
+            :items="selectedItems"
+            :width="width"
+            @close-item="removeSelectedItem"
+        />
       </template>
     </v-select>
 

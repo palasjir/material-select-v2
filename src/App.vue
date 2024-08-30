@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import SelectV2 from "./components/SelectV2.vue";
 import { cities } from "./components/cities";
+import {ref} from "vue";
 
-const items = cities;
+const variant = ref('underlined')
+
 </script>
 
 <template>
@@ -27,6 +29,14 @@ const items = cities;
         </pre>
       </v-alert>
 
+      <div>
+        <label>
+          Variant:
+        <v-select v-model="variant" :items="['outlined', 'underlined']" />
+
+        </label>
+      </div>
+
       <article class="d-flex flex-column ga-4">
         <header>
           <h2>Single select</h2>
@@ -36,7 +46,7 @@ const items = cities;
           <header>
             <h3>With search</h3>
           </header>
-          <SelectV2 :items="cities" search-enabled />
+          <SelectV2 :variant="variant" :items="cities" search-enabled />
         </section>
       </article>
 
@@ -49,16 +59,20 @@ const items = cities;
           <header>
             <h3>With search</h3>
           </header>
-          <SelectV2 multiple :items="cities" search-enabled />
+          <SelectV2 multiple :items="cities" search-enabled :variant="variant" />
         </section>
 
         <section>
           <header>
             <h3>With search and create item</h3>
           </header>
-          <SelectV2 multiple :items="cities" search-enabled />
+           TBD
         </section>
       </article>
+
+      <div style="height: 800px">
+
+      </div>
     </v-container>
   </v-app>
 </template>

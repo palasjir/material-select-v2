@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "uuid": "^10.0.0",
-    "vue": "^3.4.15",
-    "vuetify": "^3.7.0"
+    "vue": "^3.4.38",
+    "vuetify": "^3.7.1"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
@@ -21,5 +21,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.0.12",
     "vue-tsc": "^1.8.27"
+  },
+  "volta": {
+    "node": "20.17.0"
   }
 }

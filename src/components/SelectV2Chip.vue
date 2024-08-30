@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, defineEmits, onUnmounted, onBeforeUnmount } from "vue";
+import {onMounted, ref, defineEmits, onBeforeUnmount, inject} from "vue";
 
 const chipRef = ref(null);
 const isOverflowing = ref(false);
@@ -16,27 +16,57 @@ type Emits = {
 
 const emit = defineEmits<Emits>();
 
-onMounted(() => {
-  if (!chipRef.value) return;
-  const { right } = chipRef.value.$el.getBoundingClientRect();
+const {registerChip, unregisterChip} = inject('select-v2');
+
+const id = ref<number>(0);
+
+const check = () => {
+  const el = chipRef.value?.$el;
+  if(!el) {
+    emit("overflowing", {
+      id: id.value,
+      isOverflowing: false,
+    });
+    return;
+  }
+  const {right} = el.getBoundingClientRect();
   isOverflowing.value = right + 70 >= props.bound;
 
+  console.log('check');
+
   emit("overflowing", {
-    id: props.item.raw.id,
+    id: id.value,
     isOverflowing: isOverflowing.value,
   });
+}
+
+
+
+onMounted(() => {
+  id.value = props.item.raw.id;
+  if (!chipRef.value) return;
+  registerChip({id: id.value, api:{ check }});
+  check();
 });
 
 onBeforeUnmount(() => {
-  emit("overflowing", { id: props.item.raw.id, isOverflowing: false });
+  unregisterChip(id.value);
+  emit("overflowing", { id: id.value, isOverflowing: false });
 });
 </script>
 
 <template>
-  <v-chip :class="{ overflowing: isOverflowing }" ref="chipRef" />
+  <v-chip class="flex-shrink-1" :class="{ overflowing: isOverflowing }" ref="chipRef">
+    <template #default>
+      <span class="select-chip text-truncate">{{ item.title }}</span>
+    </template>
+  </v-chip>
 </template>
 
 <style scoped>
+.select-chip {
+  max-width: 200px;
+}
 .overflowing {
   opacity: 0;
   pointer-events: none;
