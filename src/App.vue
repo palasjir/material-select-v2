@@ -3,8 +3,43 @@ import SelectV2 from "./components/SelectV2.vue";
 import {cities} from "./components/cities";
 import {ref} from "vue";
 import {take} from "lodash";
+import {AsyncValue} from "./components/AsyncValue.ts";
+import {AsyncCreate} from "./components/AsyncCreate.ts";
 
 const variant = ref('underlined')
+
+// This simulates async search on the backend (normally we would do some API call here)
+const getItems = (search: string) => {
+  return new Promise<any>((resolve) => {
+    setTimeout(() => {
+      if(!search) {
+        return resolve(take(cities, 10));
+      }
+      const filtered = cities.filter(city => city.title.toLowerCase().includes(search.toLowerCase()));
+      resolve(filtered);
+    }, 2000)
+  });
+}
+
+const asyncItems = new AsyncValue(getItems, []);
+
+let counter = 10_000;
+
+const createItem = (value: string) => {
+  const item = {id: counter, title: value};
+  counter += 1;
+  return item;
+}
+
+const createItemAsync = new AsyncCreate<any>(async (value: string) => {
+  const item = {id: counter, title: value};
+  counter += 1;
+  return new Promise<any>((resolve) => {
+    setTimeout(() => {
+      resolve(item);
+    }, 2000)
+  });
+});
 
 </script>
 
@@ -12,7 +47,7 @@ const variant = ref('underlined')
   <v-app>
     <v-container class="d-flex flex-column ga-4">
       <v-sheet class="d-flex flex-column pa-2 ga-4" border rounded>
-        <h1>New generation select</h1>
+        <h1>New generation select (POC)</h1>
         <div>
           <v-alert type="info" variant="outlined">
         <pre>
@@ -100,7 +135,16 @@ const variant = ref('underlined')
             <h3>With search and create item</h3>
           </header>
 
-          <SelectV2 multiple :items="cities" search-enabled creation-enabled :variant="variant"/>
+          <SelectV2 multiple :items="cities" search-enabled creation-enabled :on-create="createItem" :variant="variant"/>
+        </section>
+
+
+        <section>
+          <header>
+            <h3>Async search and create item (delay 2000ms)</h3>
+          </header>
+
+          <SelectV2 multiple :items="asyncItems" search-enabled creation-enabled :on-create="createItemAsync" :variant="variant"/>
         </section>
       </v-sheet>
 

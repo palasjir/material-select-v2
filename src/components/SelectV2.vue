@@ -3,6 +3,9 @@ import {v4} from "uuid";
 import {ref, watch, nextTick, onMounted, computed, onBeforeUnmount, provide} from "vue";
 import SelectV2Chip from "./SelectV2Chip.vue";
 import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
+import {AsyncValue} from "./AsyncValue.ts";
+import {debounce} from "lodash";
+import {AsyncCreate} from "./AsyncCreate.ts";
 
 type OverflowingChipApi = {
   check(): void;
@@ -13,9 +16,11 @@ const props = withDefaults(
       id?: string;
       multiple?: boolean;
       searchEnabled?: boolean;
-      creationEnabled?: boolean;
-      items: any[];
+      items: any[] | AsyncValue<any[]>;
       variant: 'outlined' | 'underlined';
+
+      creationEnabled?: boolean;
+      onCreate?: ((searchValue: string) => any) | AsyncCreate<any>;
     }>(),
     {
       id: () => `select-${v4()}`,
@@ -40,12 +45,16 @@ const search = ref("");
 const active = ref(minIndex.value);
 const selectedItemsSet = ref(new Set());
 
-let counter = 10000;
 const registeredChips = new Map<number, OverflowingChipApi>();
 const overflowingChips = ref(new Set<number>());
 
 const filteredItems = computed(() => {
   const searchValue = search.value.toLocaleLowerCase();
+
+  if (props.items instanceof AsyncValue) {
+    return props.items.value.value ?? [];
+  }
+
   return props.items.filter((it) =>
       it.title.toLowerCase().includes(searchValue)
   );
@@ -60,6 +69,20 @@ const selectedItems = computed({
 });
 const offset = computed(() => {
   return props.variant === 'underlined' ? [5, 0] : [15, 15];
+});
+const creating = computed(() => {
+  if(props.onCreate && props.onCreate instanceof AsyncCreate) {
+    return  props.onCreate.loading.value;
+  }
+  return false;
+})
+const loading = computed(() => {
+  let temp = false;
+  if (props.items instanceof AsyncValue) {
+    temp = temp || props.items.loading.value;
+  }
+  temp = temp || creating.value;
+  return temp;
 });
 
 const openPopup = () => {
@@ -82,13 +105,20 @@ const toggleItem = (index: number) => {
   active.value = index;
 };
 
-const addItem = () => {
+const addItem = async () => {
   const title = search.value.trim();
-  if (title) {
-    const item = {id: counter, title};
+  const _onCreate = props.onCreate;
+  if (title && _onCreate) {
+    let item: any;
+    if (_onCreate instanceof AsyncCreate) {
+      item = await _onCreate.execute(title);
+      selectedItemsSet.value.add(item);
+    } else {
+      item = _onCreate(title);
+    }
+
     selectedItemsSet.value.add(item);
     search.value = "";
-    counter += 1;
   }
 };
 
@@ -170,14 +200,27 @@ watch(
     }
 );
 
-watch(search, () => {
+const debouncedSearch = debounce((value: string) => {
+  if (props.items instanceof AsyncValue) {
+    props.items.execute(value ?? '');
+  }
+}, 250);
+
+watch(search, (searchValue) => {
   active.value = minIndex.value;
+  if (props.items instanceof AsyncValue) {
+    debouncedSearch(searchValue);
+  }
 });
 
 watch(open, (value) => {
   if (!value) {
     active.value = minIndex.value;
     search.value = "";
+  } else {
+    if (props.items instanceof AsyncValue) {
+      props.items.execute(search.value ?? '');
+    }
   }
 });
 
@@ -276,8 +319,10 @@ provide('select-v2', {
             @keydown="searchKeyDown"
             variant="underlined"
             color="primary"
+            :loading="loading"
+            :disabled="creating"
         />
-        <v-list density="compact" max-height="30vh">
+        <v-list density="compact" max-height="30vh" :disabled="creating">
           <template #default>
             <template v-if="creationEnabled">
               <v-list-item
@@ -302,6 +347,12 @@ provide('select-v2', {
                     <v-icon icon="mdi-plus" density="compact" color="primary"/>
                   </div>
                 </template>
+                <template #append>
+                  <v-progress-circular
+                      v-if="creating"
+                      color="primary"
+                      indeterminate />
+                </template>
               </v-list-item>
             </template>
 
@@ -318,7 +369,7 @@ provide('select-v2', {
                   :data-index="index"
               >
                 <template #title>
-                  <v-tooltip location="top" :open-delay="300" transition="none">
+                  <v-tooltip location="top left" :open-delay="300" transition="none" :max-width="width - 80">
                     <template #activator="{props: activatorProps}">
                       <div class="text-truncate" v-bind="activatorProps">{{ item.title }}</div>
                     </template>
