@@ -16,6 +16,7 @@ const props = withDefaults(
     {
       id: () => `select-${v4()}`,
       multiple: false,
+      searchEnabled: false,
       variant: "underlined",
     }
 );
@@ -263,6 +264,7 @@ provide('select-v2', {
     >
       <v-sheet ref="sheetRef" v-if="open" :elevation="2">
         <v-text-field
+            v-if="searchEnabled"
             ref="textField"
             v-model="search"
             class="px-4 py-2"
