@@ -11,7 +11,7 @@ const props = withDefaults(
       searchEnabled?: boolean;
       creationEnabled?: boolean;
       items: any[];
-      variant: string;
+      variant: 'outlined' | 'underlined';
     }>(),
     {
       id: () => `select-${v4()}`,
@@ -129,11 +129,7 @@ const handleChipOverflow = ({id, isOverflowing}) => {
 };
 
 const removeSelectedItem = (selectedItem) => {
-  console.log('selectedItem', selectedItem, selectedItemsSet.value);
-  const removed = selectedItemsSet.value.delete(selectedItem);
-  if (removed) {
-    console.log('removed', selectedItem);
-  }
+  selectedItemsSet.value.delete(selectedItem);
 };
 
 const updateDimensions = (el: HTMLElement) => {
@@ -163,16 +159,16 @@ watch(
     () => textField.value,
     async () => {
       await nextTick();
-      if (textField.value) {
+      const field = textField.value;
+      if (field) {
         setTimeout(() => {
-          textField.value.focus();
+          field.focus();
         }, 200);
       }
     }
 );
 
 watch(search, () => {
-  console.log('search', search.value);
   active.value = minIndex.value;
 });
 
@@ -300,7 +296,7 @@ provide('select-v2', {
                 </template>
                 <template #prepend>
                   <div class="pl-1 mr-2 text-grey-darken-1">
-                    <v-icon icon="mdi-plus" density="compact"/>
+                    <v-icon icon="mdi-plus" density="compact" color="primary"/>
                   </div>
                 </template>
               </v-list-item>

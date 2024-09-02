@@ -2,6 +2,7 @@
 import SelectV2 from "./components/SelectV2.vue";
 import { cities } from "./components/cities";
 import {ref} from "vue";
+import { take } from "lodash";
 
 const variant = ref('underlined')
 
@@ -44,6 +45,13 @@ const variant = ref('underlined')
 
         <section>
           <header>
+            <h3>Without search (10 items)</h3>
+          </header>
+          <SelectV2 :items="take(cities, 10)" :variant="variant" />
+        </section>
+
+        <section>
+          <header>
             <h3>With search</h3>
           </header>
           <SelectV2 :variant="variant" :items="cities" search-enabled />
@@ -54,6 +62,13 @@ const variant = ref('underlined')
         <header>
           <h2>Multi select</h2>
         </header>
+
+        <section>
+          <header>
+            <h3>Without search (10 items)</h3>
+          </header>
+          <SelectV2 multiple :items="take(cities, 10)" :variant="variant" />
+        </section>
 
         <section>
           <header>
@@ -71,6 +86,7 @@ const variant = ref('underlined')
         </section>
       </article>
 
+      <!-- Adding some extra space so it's possible to scroll down to test menu placements. -->
       <div style="height: 800px">
 
       </div>
