@@ -45,6 +45,15 @@ const filteredItems = computed(() => {
   );
 });
 
+const selectedItems = computed({
+  get: () => {
+    return [...selectedItemsSet.value];
+  },
+  set: (value) => {
+    selectedItemsSet.value = new Set(value);
+  },
+});
+
 const openPopup = () => {
   open.value = true;
 };
@@ -65,18 +74,7 @@ const toggleItem = (index: number) => {
   active.value = index;
 };
 
-const selectedItems = computed({
-  get: () => {
-    return [...selectedItemsSet.value];
-  },
-  set: (value) => {
-    selectedItemsSet.value = new Set(value);
-  },
-});
-
-const searchKeyDown = (event) => {
-  console.log("down");
-
+const searchKeyDown = (event: KeyboardEvent) => {
   if (event.key === "ArrowDown") {
     active.value = Math.min(filteredItems.value.length - 1, active.value + 1);
     return;
@@ -97,7 +95,7 @@ const searchKeyDown = (event) => {
   }
 };
 
-const selectKeyDown = (event) => {
+const selectKeyDown = (event: KeyboardEvent) => {
   if (event.key === "Enter" || event.key === " ") {
     open.value = true;
     return;
@@ -108,14 +106,35 @@ const handleChipOverflow = ({ id, isOverflowing }) => {
   if (isOverflowing) {
     overflowingChips.value.add(id);
   } else {
-    console.log("delete", id, overflowingChips.value);
     overflowingChips.value.delete(id);
   }
-  console.log('overflowing', overflowingChips.value.size);
 };
 
 const removeSelectedItem = (selectedItem) => {
   selectedItemsSet.value.delete(selectedItem);
+};
+
+const updateDimensions = (el: HTMLElement) => {
+  const rect = el.getBoundingClientRect();
+  width.value = rect.width;
+  bound.value = rect.right;
+}
+
+const updateOverflowingChips = () => {
+  requestAnimationFrame(() => {
+    for (const [_, value] of registeredChips) {
+      value.check();
+    }
+  })
+}
+
+const registerChip = ({id, api}: {id: number, api: OverflowingChipApi}) => {
+  registeredChips.set(id, api);
+};
+
+const unregisterChip = ({id}: {id: number}) => {
+  registeredChips.delete(id);
+  updateOverflowingChips();
 };
 
 watch(
@@ -149,20 +168,6 @@ watch(active, (value) => {
 
 let observer: ResizeObserver | undefined;
 
-const updateDimensions = (el: HTMLElement) => {
-  const rect = el.getBoundingClientRect();
-  width.value = rect.width;
-  bound.value = rect.right;
-}
-
-const updateOverflowingChips = () => {
-  requestAnimationFrame(() => {
-    for (const [_, value] of registeredChips) {
-      value.check();
-    }
-  })
-}
-
 onMounted(() => {
   const el = selectRef.value?.$el as HTMLElement | undefined;
   if (el) {
@@ -180,17 +185,6 @@ onBeforeUnmount(() => {
   observer?.disconnect();
   observer = undefined
 })
-
-const registerChip = ({id, api}: {id: number, api: OverflowingChipApi}) => {
-  console.log('register chip', id);
-  registeredChips.set(id, api);
-};
-
-const unregisterChip = ({id}: {id: number}) => {
-  console.log('unregister chip', id);
-  registeredChips.delete(id);
-  updateOverflowingChips();
-};
 
 provide('select-v2', {
    registerChip,
@@ -262,7 +256,7 @@ provide('select-v2', {
           variant="underlined"
           color="primary"
         />
-        <v-list density="compact" max-height="50vh">
+        <v-list density="compact" max-height="30vh">
           <template #default>
             <template v-if="multiple">
               <v-list-item

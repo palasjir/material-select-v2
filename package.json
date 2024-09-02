@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "uuid": "^10.0.0",
     "vue": "^3.4.38",
     "vuetify": "^3.7.1"

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import {onMounted, ref, defineEmits, onBeforeUnmount, inject} from "vue";
+import { debounce} from 'lodash'
 
 const chipRef = ref(null);
 const isOverflowing = ref(false);
@@ -20,7 +21,7 @@ const {registerChip, unregisterChip} = inject('select-v2');
 
 const id = ref<number>(0);
 
-const check = () => {
+const check = debounce(() => {
   const el = chipRef.value?.$el;
   if(!el) {
     emit("overflowing", {
@@ -38,7 +39,7 @@ const check = () => {
     id: id.value,
     isOverflowing: isOverflowing.value,
   });
-}
+}, 10);
 
 
 
