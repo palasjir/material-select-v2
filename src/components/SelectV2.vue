@@ -4,6 +4,10 @@ import {ref, watch, nextTick, onMounted, computed, onBeforeUnmount, provide} fro
 import SelectV2Chip from "./SelectV2Chip.vue";
 import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
 
+type OverflowingChipApi = {
+  check(): void;
+}
+
 const props = withDefaults(
     defineProps<{
       id?: string;
@@ -37,11 +41,6 @@ const active = ref(minIndex.value);
 const selectedItemsSet = ref(new Set());
 
 let counter = 10000;
-
-type OverflowingChipApi = {
-  check(): void;
-}
-
 const registeredChips = new Map<number, OverflowingChipApi>();
 const overflowingChips = ref(new Set<number>());
 
@@ -51,7 +50,6 @@ const filteredItems = computed(() => {
       it.title.toLowerCase().includes(searchValue)
   );
 });
-
 const selectedItems = computed({
   get: () => {
     return [...selectedItemsSet.value];
@@ -59,6 +57,9 @@ const selectedItems = computed({
   set: (value) => {
     selectedItemsSet.value = new Set(value);
   },
+});
+const offset = computed(() => {
+  return props.variant === 'underlined' ? [5, 0] : [15, 15];
 });
 
 const openPopup = () => {
@@ -256,7 +257,7 @@ provide('select-v2', {
         ref="menuRef"
         :activator="`#${id}`"
         v-model="open"
-        :offset="[5, 0]"
+        :offset="offset"
         :width="width"
         :close-on-content-click="false"
         no-click-animation

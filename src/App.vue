@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import SelectV2 from "./components/SelectV2.vue";
-import { cities } from "./components/cities";
+import {cities} from "./components/cities";
 import {ref} from "vue";
-import { take } from "lodash";
+import {take} from "lodash";
 
 const variant = ref('underlined')
 
@@ -11,7 +11,10 @@ const variant = ref('underlined')
 <template>
   <v-app>
     <v-container class="d-flex flex-column ga-4">
-      <v-alert type="info" variant="outlined">
+      <v-sheet class="d-flex flex-column pa-2 ga-4" border rounded>
+        <h1>New generation select</h1>
+        <div>
+          <v-alert type="info" variant="outlined">
         <pre>
        Select with improved UX:
        
@@ -28,53 +31,39 @@ const variant = ref('underlined')
        Notes:
          - selected items higlighted blue
         </pre>
-      </v-alert>
+          </v-alert>
+        </div>
 
-      <div>
-        <label>
-          Variant:
-        <v-select v-model="variant" :items="['outlined', 'underlined']" />
+        <div>
+          <v-select
+              label="Variant"
+              variant="outlined"
+              flat
+              color="primary"
+              v-model="variant"
+              :items="['outlined', 'underlined']"
+              hide-details
+          />
+        </div>
+      </v-sheet>
 
-        </label>
-      </div>
-
-      <article class="d-flex flex-column ga-4">
+      <v-sheet class="d-flex flex-column pa-2 ga-4" border rounded>
         <header>
-          <h2>Single select</h2>
+          <h2>Single</h2>
         </header>
 
         <section>
           <header>
             <h3>Without search (10 items)</h3>
           </header>
-          <SelectV2 :items="take(cities, 10)" :variant="variant" />
+          <SelectV2 :items="take(cities, 10)" :variant="variant"/>
         </section>
 
         <section>
           <header>
             <h3>With search</h3>
           </header>
-          <SelectV2 :variant="variant" :items="cities" search-enabled />
-        </section>
-      </article>
-
-      <article class="d-flex flex-column ga-4">
-        <header>
-          <h2>Multi select</h2>
-        </header>
-
-        <section>
-          <header>
-            <h3>Without search (10 items)</h3>
-          </header>
-          <SelectV2 multiple :items="take(cities, 10)" :variant="variant" />
-        </section>
-
-        <section>
-          <header>
-            <h3>With search</h3>
-          </header>
-          <SelectV2 multiple :items="cities" search-enabled :variant="variant" />
+          <SelectV2 :variant="variant" :items="cities" search-enabled/>
         </section>
 
         <section>
@@ -82,9 +71,38 @@ const variant = ref('underlined')
             <h3>With search and create item</h3>
           </header>
 
-          <SelectV2 multiple :items="cities" search-enabled creation-enabled :variant="variant" />
+          <SelectV2 :items="cities" search-enabled creation-enabled :variant="variant"/>
         </section>
-      </article>
+
+      </v-sheet>
+
+      <v-sheet class="d-flex flex-column pa-2 ga-4" border rounded>
+        <header>
+          <h2>Multi</h2>
+        </header>
+
+        <section>
+          <header>
+            <h3>Without search (10 items)</h3>
+          </header>
+          <SelectV2 multiple :items="take(cities, 10)" :variant="variant"/>
+        </section>
+
+        <section>
+          <header>
+            <h3>With search</h3>
+          </header>
+          <SelectV2 multiple :items="cities" search-enabled :variant="variant"/>
+        </section>
+
+        <section>
+          <header>
+            <h3>With search and create item</h3>
+          </header>
+
+          <SelectV2 multiple :items="cities" search-enabled creation-enabled :variant="variant"/>
+        </section>
+      </v-sheet>
 
       <!-- Adding some extra space so it's possible to scroll down to test menu placements. -->
       <div style="height: 800px">
