@@ -4,6 +4,7 @@ export const cities = [
   { id: 3, title: "Chicago" },
   { id: 4, title: "Houston" },
   { id: 5, title: "Phoenix" },
+  { id: 501, title: "A person who, as a suspected or confirmed juvenile, has been required to leave and has left, or been removed from, licensed premises or regulated premises and remains on any footpath or in any area subject to the control or management of the licensee" },
   { id: 6, title: "Philadelphia" },
   { id: 7, title: "San Antonio" },
   { id: 8, title: "San Diego" },

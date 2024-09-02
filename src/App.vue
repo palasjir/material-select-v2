@@ -66,7 +66,8 @@ const variant = ref('underlined')
           <header>
             <h3>With search and create item</h3>
           </header>
-           TBD
+
+          <SelectV2 multiple :items="cities" search-enabled creation-enabled :variant="variant" />
         </section>
       </article>
 

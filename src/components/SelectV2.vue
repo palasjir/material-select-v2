@@ -1,23 +1,27 @@
 <script lang="ts" setup>
-import { v4 } from "uuid";
+import {v4} from "uuid";
 import {ref, watch, nextTick, onMounted, computed, onBeforeUnmount, provide} from "vue";
 import SelectV2Chip from "./SelectV2Chip.vue";
 import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
 
 const props = withDefaults(
-  defineProps<{
-    id?: string;
-    multiple?: boolean;
-    searchEnabled?: boolean;
-    items: any[];
-    variant: string;
-  }>(),
-  {
-    id: () => `select-${v4()}`,
-    multiple: false,
-    variant: "underlined",
-  }
+    defineProps<{
+      id?: string;
+      multiple?: boolean;
+      searchEnabled?: boolean;
+      creationEnabled?: boolean;
+      items: any[];
+      variant: string;
+    }>(),
+    {
+      id: () => `select-${v4()}`,
+      multiple: false,
+      variant: "underlined",
+    }
 );
+
+const NEW_VALUE_INDEX = -1;
+const minIndex = computed(() => props.creationEnabled ? NEW_VALUE_INDEX : 0);
 
 const id = ref(props.id);
 const open = ref(false);
@@ -28,11 +32,13 @@ const sheetRef = ref(null);
 const width = ref(0);
 const bound = ref(0);
 const search = ref("");
-const active = ref(0);
+const active = ref(minIndex.value);
 const selectedItemsSet = ref(new Set());
 
+let counter = 10000;
+
 type OverflowingChipApi = {
-   check(): void;
+  check(): void;
 }
 
 const registeredChips = new Map<number, OverflowingChipApi>();
@@ -41,7 +47,7 @@ const overflowingChips = ref(new Set<number>());
 const filteredItems = computed(() => {
   const searchValue = search.value.toLocaleLowerCase();
   return props.items.filter((it) =>
-    it.title.toLowerCase().includes(searchValue)
+      it.title.toLowerCase().includes(searchValue)
   );
 });
 
@@ -74,24 +80,36 @@ const toggleItem = (index: number) => {
   active.value = index;
 };
 
+const addItem = () => {
+  const title = search.value.trim();
+  if (title) {
+    const item = {id: counter, title};
+    selectedItemsSet.value.add(item);
+    search.value = "";
+    counter += 1;
+  }
+};
+
 const searchKeyDown = (event: KeyboardEvent) => {
-  if (event.key === "ArrowDown") {
-    active.value = Math.min(filteredItems.value.length - 1, active.value + 1);
-    return;
-  }
-
-  if (event.key === "ArrowUp") {
-    active.value = Math.max(0, active.value - 1);
-  }
-
-  if (event.key === "Tab") {
-    event.preventDefault();
-    event.stopPropagation();
-    active.value = (active.value + 1) % filteredItems.value.length;
-  }
-
-  if (event.key === "Enter") {
-    toggleItem(active.value);
+  switch (event.key) {
+    case "ArrowDown":
+      active.value = Math.min(filteredItems.value.length - 1, active.value + 1);
+      break;
+    case "ArrowUp":
+      active.value = Math.max(minIndex.value, active.value - 1);
+      break;
+    case "Tab":
+      event.preventDefault();
+      event.stopPropagation();
+      active.value = (active.value + 1) % filteredItems.value.length;
+      break;
+    case "Enter":
+      if (active.value === NEW_VALUE_INDEX) {
+        addItem();
+      } else {
+        toggleItem(active.value);
+      }
+      break;
   }
 };
 
@@ -102,7 +120,7 @@ const selectKeyDown = (event: KeyboardEvent) => {
   }
 };
 
-const handleChipOverflow = ({ id, isOverflowing }) => {
+const handleChipOverflow = ({id, isOverflowing}) => {
   if (isOverflowing) {
     overflowingChips.value.add(id);
   } else {
@@ -111,7 +129,11 @@ const handleChipOverflow = ({ id, isOverflowing }) => {
 };
 
 const removeSelectedItem = (selectedItem) => {
-  selectedItemsSet.value.delete(selectedItem);
+  console.log('selectedItem', selectedItem, selectedItemsSet.value);
+  const removed = selectedItemsSet.value.delete(selectedItem);
+  if (removed) {
+    console.log('removed', selectedItem);
+  }
 };
 
 const updateDimensions = (el: HTMLElement) => {
@@ -128,34 +150,35 @@ const updateOverflowingChips = () => {
   })
 }
 
-const registerChip = ({id, api}: {id: number, api: OverflowingChipApi}) => {
+const registerChip = ({id, api}: { id: number, api: OverflowingChipApi }) => {
   registeredChips.set(id, api);
 };
 
-const unregisterChip = ({id}: {id: number}) => {
+const unregisterChip = ({id}: { id: number }) => {
   registeredChips.delete(id);
   updateOverflowingChips();
 };
 
 watch(
-  () => textField.value,
-  async () => {
-    await nextTick();
-    if (textField.value) {
-      setTimeout(() => {
-        textField.value.focus();
-      }, 200);
+    () => textField.value,
+    async () => {
+      await nextTick();
+      if (textField.value) {
+        setTimeout(() => {
+          textField.value.focus();
+        }, 200);
+      }
     }
-  }
 );
 
 watch(search, () => {
-  active.value = 0;
+  console.log('search', search.value);
+  active.value = minIndex.value;
 });
 
 watch(open, (value) => {
   if (!value) {
-    active.value = 0;
+    active.value = minIndex.value;
     search.value = "";
   }
 });
@@ -163,7 +186,7 @@ watch(open, (value) => {
 watch(active, (value) => {
   const parent = sheetRef.value?.$el;
   const el = parent?.querySelector(`[data-index="${value}"]`) as HTMLElement;
-  el.scrollIntoView({ block: "nearest" });
+  el.scrollIntoView({block: "nearest"});
 });
 
 let observer: ResizeObserver | undefined;
@@ -187,8 +210,8 @@ onBeforeUnmount(() => {
 })
 
 provide('select-v2', {
-   registerChip,
-   unregisterChip
+  registerChip,
+  unregisterChip
 });
 
 </script>
@@ -196,31 +219,30 @@ provide('select-v2', {
 <template>
   <div>
     <v-select
-      class="my-select"
-      :id="id"
-      ref="selectRef"
-      v-model:model-value="selectedItems"
-      chips
-      multiple
-      readonly
-      placeholder="Select city ..."
-      persistent-placeholder
-      @click.prevent.stop="openPopup"
-      @keydown="selectKeyDown"
-      @keyup.prevent.stop
-      density="comfortable"
-      closable-chips
-      color="primary"
-      :variant="variant"
-      :focused="open"
+        class="my-select"
+        :id="id"
+        ref="selectRef"
+        :model-value="selectedItems"
+        chips
+        multiple
+        readonly
+        placeholder="Select city ..."
+        persistent-placeholder
+        @click.prevent.stop="openPopup"
+        @keydown="selectKeyDown"
+        @keyup.prevent.stop
+        density="comfortable"
+        color="primary"
+        :variant="variant"
+        :focused="open"
     >
-      <template #chip="{ index, item, props: chipProps }">
+      <template #chip="{ index}">
         <SelectV2Chip
-          :bound="bound"
-          :index="index"
-          :item="item"
-          v-bind="chipProps"
-          @overflowing="handleChipOverflow"
+            :bound="bound"
+            :index="index"
+            :item="selectedItems[index]"
+            @overflowing="handleChipOverflow"
+            @close="removeSelectedItem"
         />
       </template>
       <template #append-inner>
@@ -234,48 +256,82 @@ provide('select-v2', {
     </v-select>
 
     <v-menu
-      ref="menuRef"
-      :activator="`#${id}`"
-      v-model="open"
-      :offset="[15, 15]"
-      :width="width"
-      :close-on-content-click="false"
-      no-click-animation
-      transition="none"
+        ref="menuRef"
+        :activator="`#${id}`"
+        v-model="open"
+        :offset="[5, 0]"
+        :width="width"
+        :close-on-content-click="false"
+        no-click-animation
+        transition="none"
     >
       <v-sheet ref="sheetRef" v-if="open" :elevation="2">
         <v-text-field
-          ref="textField"
-          v-model="search"
-          class="px-4 py-2"
-          placeholder="Search city ..."
-          density="comfortable"
-          hide-details
-          @click.prevent.stop
-          @keydown="searchKeyDown"
-          variant="underlined"
-          color="primary"
+            ref="textField"
+            v-model="search"
+            class="px-4 py-2"
+            placeholder="Search city ..."
+            density="comfortable"
+            hide-details
+            @click.prevent.stop
+            @keydown="searchKeyDown"
+            variant="underlined"
+            color="primary"
         />
         <v-list density="compact" max-height="30vh">
           <template #default>
+            <template v-if="creationEnabled">
+              <v-list-item
+                  :value="search"
+                  :title="search"
+                  :active="active === NEW_VALUE_INDEX"
+                  @click="addItem"
+                  density="compact"
+                  :data-index="NEW_VALUE_INDEX"
+                  :disabled="!search"
+              >
+                <template #title>
+                  <div class="text-grey-darken-1" v-if="!search">
+                    <i>(Type to create a new item)</i>
+                  </div>
+                  <div v-else>
+                    {{ search }}
+                  </div>
+                </template>
+                <template #prepend>
+                  <div class="pl-1 mr-2 text-grey-darken-1">
+                    <v-icon icon="mdi-plus" density="compact"/>
+                  </div>
+                </template>
+              </v-list-item>
+            </template>
+
             <template v-if="multiple">
               <v-list-item
-                v-for="(item, index) in filteredItems"
-                :key="item.title"
-                :value="item.title"
-                :title="item.title"
-                :class="{ selected: selectedItemsSet.has(item) }"
-                :active="index === active"
-                @click="toggleItem(index)"
-                density="compact"
-                :data-index="index"
+                  v-for="(item, index) in filteredItems"
+                  :key="item.title"
+                  :value="item.title"
+                  :title="item.title"
+                  :class="{ selected: selectedItemsSet.has(item) }"
+                  :active="index === active"
+                  @click="toggleItem(index)"
+                  density="compact"
+                  :data-index="index"
               >
+                <template #title>
+                  <v-tooltip location="top" :open-delay="300" transition="none">
+                    <template #activator="{props: activatorProps}">
+                      <div class="text-truncate" v-bind="activatorProps">{{ item.title }}</div>
+                    </template>
+                    <div> {{ item.title }}</div>
+                  </v-tooltip>
+                </template>
                 <template #prepend>
                   <v-checkbox
-                    class="mr-2"
-                    :model-value="selectedItemsSet.has(item)"
-                    density="compact"
-                    hide-details
+                      class="mr-2"
+                      :model-value="selectedItemsSet.has(item)"
+                      density="compact"
+                      hide-details
                   />
                 </template>
               </v-list-item>
@@ -283,23 +339,23 @@ provide('select-v2', {
 
             <template v-else>
               <v-list-item
-                v-for="(item, index) in filteredItems"
-                :key="`single-${item.title}`"
-                :value="item.title"
-                :title="item.title"
-                :class="{ selected: selectedItemsSet.has(item) }"
-                :active="index === active"
-                @click="toggleItem(index)"
-                density="compact"
-                :data-index="index"
+                  v-for="(item, index) in filteredItems"
+                  :key="`single-${item.title}`"
+                  :value="item.title"
+                  :title="item.title"
+                  :class="{ selected: selectedItemsSet.has(item) }"
+                  :active="index === active"
+                  @click="toggleItem(index)"
+                  density="compact"
+                  :data-index="index"
               >
                 <template #prepend>
                   <v-radio
-                    class="mr-2"
-                    :model-value="selectedItemsSet.has(item)"
-                    density="compact"
-                    hide-details
-                    readonly
+                      class="mr-2"
+                      :model-value="selectedItemsSet.has(item)"
+                      density="compact"
+                      hide-details
+                      readonly
                   />
                 </template>
               </v-list-item>

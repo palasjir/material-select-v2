@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {nextTick, ref} from "vue";
+import {computed, nextTick, ref} from "vue";
 
 interface Props {
   count: number;
@@ -15,17 +15,19 @@ const props = defineProps<Props>();
 defineEmits<Emits>();
 
 const sheetRef = ref<any>();
+const maxChipWidth = computed(() => `${props.width - 80}px`);
 
-const  handleOpen = async () => {
-  console.log('open')
+const handleOpen = async () => {
   await nextTick();
   const el = sheetRef.value.$el;
   if(!el) return;
 
-  const {width, height} = el.getBoundingClientRect();
+  const {height} = el.getBoundingClientRect();
 
+  // once the submenu is open we fixate its width and height, so that when we start removing chips it doesn't change its size
   el.setAttribute('style', `width: ${props.width}px; height: ${height}px;`);
 }
+
 </script>
 
 <template>
@@ -38,7 +40,7 @@ const  handleOpen = async () => {
             color="primary"
             @click.prevent.stop
         >
-          <span>+{{ count }}</span>
+          <div>+{{ count }}</div>
         </v-chip>
       </div>
     </template>
@@ -51,7 +53,9 @@ const  handleOpen = async () => {
             closable
             @click:close="$emit('closeItem', selectedItem)"
         >
-          {{ selectedItem.title }}
+          <div class="text-truncate" :style="{maxWidth: maxChipWidth}">
+            {{ selectedItem.title }}
+          </div>
         </v-chip>
       </div>
     </v-sheet>
@@ -59,5 +63,4 @@ const  handleOpen = async () => {
 </template>
 
 <style scoped>
-
 </style>
