@@ -20,7 +20,7 @@ const maxChipWidth = computed(() => `${props.width - 80}px`);
 const handleOpen = async () => {
   await nextTick();
   const el = sheetRef.value.$el;
-  if(!el) return;
+  if (!el) return;
 
   const {height} = el.getBoundingClientRect();
 
@@ -53,9 +53,14 @@ const handleOpen = async () => {
             closable
             @click:close="$emit('closeItem', selectedItem)"
         >
-          <div class="text-truncate" :style="{maxWidth: maxChipWidth}">
-            {{ selectedItem.title }}
-          </div>
+          <v-tooltip location="top left" :open-delay="300" transition="none">
+            <template #activator="{ props: activatorProps }">
+              <div v-bind="activatorProps" class="text-truncate" :style="{maxWidth: maxChipWidth}">
+                {{ selectedItem.title }}
+              </div>
+            </template>
+            <div>{{ selectedItem.title }}</div>
+          </v-tooltip>
         </v-chip>
       </div>
     </v-sheet>
