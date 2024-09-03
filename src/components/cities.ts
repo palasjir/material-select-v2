@@ -6,7 +6,10 @@ export const cities = [
   { id: 5, title: "Phoenix" },
   { id: 501, title: "A person who, as a suspected or confirmed juvenile, has been required to leave and has left, or been removed from, licensed premises or regulated premises and remains on any footpath or in any area subject to the control or management of the licensee" },
   { id: 6, title: "Philadelphia" },
+  { id: 101, title: "Another longer chip that is too long to show fully 1" },
+  { id: 103, title: "Another longer value" },
   { id: 7, title: "San Antonio" },
+  { id: 102, title: "Another longer chip that is too long to show fully 2" },
   { id: 8, title: "San Diego" },
   { id: 9, title: "Dallas" },
   { id: 10, title: "San Jose" },
@@ -100,7 +103,4 @@ export const cities = [
   { id: 98, title: "Spokane" },
   { id: 99, title: "Baton Rouge" },
   { id: 100, title: "Tacoma" },
-  { id: 101, title: "Another longer chip that is too long to show fully 1" },
-  { id: 102, title: "Another longer chip that is too long to show fully 2" },
-  { id: 102, title: "Another longer value" },
 ];

@@ -13,10 +13,14 @@ const perPage = 20;
 const maxPages = Math.ceil(cities.length / perPage);
 
 const fetchItems = async ({ pageParam = 0 }) => {
-  return {
-    page: pageParam,
-    items: cities.slice(pageParam * perPage, (pageParam + 1) * perPage)
-  };
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        page: pageParam,
+        items: cities.slice(pageParam * perPage, (pageParam + 1) * perPage)
+      });
+    }, 500);
+  });
 }
 
 const infiniteQuery = useInfiniteQuery({
@@ -24,20 +28,29 @@ const infiniteQuery = useInfiniteQuery({
   maxPages: maxPages,
   queryKey: ['items'],
   queryFn: fetchItems,
-  getNextPageParam: (lastPage, pages) => lastPage.page + 1,
-})
+  getNextPageParam: (lastPage) => lastPage.page + 1,
 
-infiniteQuery.hasNextPage
+})
 
 </script>
 
 <template>
   <section>
     <header>
-      <h3>Infinite scroll (delay 500ms)</h3>
+      <h3>Infinite scroll </h3>
+      <p class="text-caption">
+        (delay 500ms)
+      </p>
     </header>
 
-    <SelectV2 multiple :variant="variant" :items="infiniteQuery" search-enabled infinite />
+    <SelectV2
+        multiple
+        :variant="variant"
+        :items="infiniteQuery"
+        infinite
+        select-placeholder="Select cities ..."
+        search-placeholder="Search cities ..."
+    />
   </section>
 </template>
 

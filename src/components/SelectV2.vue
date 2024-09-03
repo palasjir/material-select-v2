@@ -6,18 +6,23 @@ import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
 import {AsyncValue} from "./AsyncValue.ts";
 import {debounce} from "lodash";
 import {AsyncCreate} from "./AsyncCreate.ts";
-import {InfiniteData, UseInfiniteQueryReturnType} from "@tanstack/vue-query";
-import {useVirtualizer} from "@tanstack/vue-virtual";
+import {InfiniteData, UseInfiniteQueryReturnType, UseQueryReturnType} from "@tanstack/vue-query";
 
 type Item = { id: number; title: string };
 
 type InfiniteRecord<T> = UseInfiniteQueryReturnType<InfiniteData<{
   page: number
   items: T[]
-}, unknown>, Error>
+}, unknown>, Error>;
+
+type AsyncQuery<T> = UseQueryReturnType<T[], Error>
 
 type OverflowingChipApi = {
   check(): void;
+}
+
+function isAsyncQuery(x: any): x is AsyncQuery<Item> {
+  return 'data' in x && 'refetch' in x && !('fetchNextPage' in x);
 }
 
 const props = withDefaults(
@@ -25,8 +30,10 @@ const props = withDefaults(
       id?: string;
       multiple?: boolean;
       searchEnabled?: boolean;
-      items: Item[] | AsyncValue<Item[]> | InfiniteRecord<Item>;
+      items: Item[] | AsyncValue<Item[]> | InfiniteRecord<Item> | AsyncQuery<Item>;
       variant: 'outlined' | 'underlined';
+      selectPlaceholder: string;
+      searchPlaceholder: string;
 
       creationEnabled?: boolean;
       onCreate?: ((searchValue: string) => any) | AsyncCreate<any>;
@@ -41,6 +48,12 @@ const props = withDefaults(
       infinite: false,
     }
 );
+
+interface Emits {
+  (e: 'update:search', value: string): void;
+}
+
+const emit = defineEmits<Emits>();
 
 const NEW_VALUE_INDEX = -1;
 const minIndex = computed(() => props.creationEnabled ? NEW_VALUE_INDEX : 0);
@@ -78,9 +91,16 @@ const filteredItems = computed(() => {
     );
   }
 
+  // handle tanstack query
+  if(isAsyncQuery(_items)) {
+    return _items.data.value ?? [];
+  }
+
   // infinite query
   const _pages = _items.data.value?.pages ?? [];
-  return _pages.flatMap((page) => page.items);
+  return _pages.flatMap((page) => page.items).filter((it) =>
+      it.title.toLowerCase().includes(searchValue)
+  );
 });
 const selectedItems = computed({
   get: () => {
@@ -100,24 +120,20 @@ const creating = computed(() => {
   return false;
 })
 const loading = computed(() => {
+  const _items = props.items;
   let temp = false;
-  if (props.items instanceof AsyncValue) {
-    temp = temp || props.items.loading.value;
+
+  if (_items instanceof AsyncValue) {
+    temp = temp || _items.loading.value;
   }
+
+  if(isAsyncQuery(_items)) {
+    return _items.isFetching.value
+  }
+
   temp = temp || creating.value;
   return temp;
 });
-
-const rowVirtualizer = useVirtualizer({
-  count: 10000,
-  getScrollElement: () => listRef.value,
-  estimateSize: () => 35,
-  overscan: 5,
-})
-
-const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems())
-
-const totalSize = computed(() => rowVirtualizer.value.getTotalSize())
 
 const openPopup = () => {
   open.value = true;
@@ -235,16 +251,16 @@ watch(
 );
 
 const debouncedSearch = debounce((value: string) => {
+  const _value = value ?? '';
   if (props.items instanceof AsyncValue) {
-    props.items.execute(value ?? '');
+    props.items.execute(_value);
   }
+  emit('update:search', _value)
 }, 250);
 
 watch(search, (searchValue) => {
   active.value = minIndex.value;
-  if (props.items instanceof AsyncValue) {
-    debouncedSearch(searchValue);
-  }
+  debouncedSearch(searchValue);
 });
 
 watch(open, async (value) => {
@@ -261,7 +277,6 @@ watch(open, async (value) => {
     if (props.infinite) {
       const infiniteLoaderElement = infiniteLoaderRef.value?.$el as HTMLElement | undefined;
       const listElement = listRef.value?.$el as HTMLElement | undefined;
-      console.log('listElement', infiniteLoaderElement, listElement);
       if (infiniteLoaderElement && listElement) {
         const ioOptions = {
           root: listElement,
@@ -269,13 +284,10 @@ watch(open, async (value) => {
         }
         const io = new IntersectionObserver((entries) => {
           const entry = entries[0];
-          console.log('entry')
           if (entry.isIntersecting) {
-            console.log('isIntersecting');
             props.items.fetchNextPage();
           }
         }, ioOptions);
-        console.log('observe');
         io.observe(infiniteLoaderElement)
       }
     }
@@ -328,7 +340,7 @@ provide('select-v2', {
         chips
         multiple
         readonly
-        placeholder="Select city ..."
+        :placeholder="selectPlaceholder"
         persistent-placeholder
         @click.prevent.stop="openPopup"
         @keydown="selectKeyDown"
@@ -373,12 +385,13 @@ provide('select-v2', {
             ref="textField"
             v-model="search"
             class="px-4 py-2"
-            placeholder="Search city ..."
+            :placeholder="searchPlaceholder"
             density="comfortable"
             hide-details
             @click.prevent.stop
             @keydown="searchKeyDown"
             variant="underlined"
+            flat
             color="primary"
             :loading="loading"
             :disabled="creating"
@@ -478,7 +491,7 @@ provide('select-v2', {
                   <div v-if="items.isFetching.value" class="d-flex justify-center">
                     <v-progress-circular color="primary" :size="20" indeterminate/>
                   </div>
-                  <div v-if="items.hasNextPage.value" class="text-gray">
+                  <div v-if="!items.isFetching.value && !items.hasNextPage.value" class="text-gray">
                     <i>No more items.</i>
                   </div>
                 </template>

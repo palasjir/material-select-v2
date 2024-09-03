@@ -45,8 +45,8 @@ const handleOpen = async () => {
       </div>
     </template>
 
-    <v-sheet ref="sheetRef" class="d-flex flex-column">
-      <div class="flex-grow-0 d-flex flex-wrap align-start ga-2 pa-4">
+    <v-sheet ref="sheetRef" class="d-flex flex-column more-chips-menu">
+      <div class="d-flex flex-wrap align-start ga-2 pa-4">
         <v-chip
             class="flex-grow-0 align-self-start"
             v-for="selectedItem in items"
@@ -68,4 +68,7 @@ const handleOpen = async () => {
 </template>
 
 <style scoped>
+.more-chips-menu {
+  transform: translateX(25px);
+}
 </style>
