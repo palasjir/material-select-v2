@@ -379,12 +379,12 @@ provide('select-v2', {
         no-click-animation
         transition="none"
     >
-      <v-sheet ref="sheetRef" v-if="open" :elevation="2">
+      <v-sheet ref="sheetRef" v-if="open" :elevation="1" rounded border>
         <v-text-field
             v-if="searchEnabled"
             ref="textField"
             v-model="search"
-            class="px-4 py-2"
+            class="mx-4 mb-3"
             :placeholder="searchPlaceholder"
             density="comfortable"
             hide-details
@@ -395,7 +395,9 @@ provide('select-v2', {
             color="primary"
             :loading="loading"
             :disabled="creating"
+            prepend-inner-icon="mdi-magnify"
         />
+        <v-divider/>
         <v-list ref="listRef" density="compact" max-height="30vh" :disabled="creating">
           <template #default>
             <template v-if="creationEnabled">

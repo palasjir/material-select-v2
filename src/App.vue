@@ -58,14 +58,23 @@ const createItem = (value: string) => {
         </div>
       </v-sheet>
 
+      <v-divider/>
+
       <v-sheet class="d-flex flex-column pa-2 ga-4">
-        <header>
+        <header class="mb-4">
           <h2>Single</h2>
+          <p class="text-caption">
+            - Allows to select only single item.<br>
+          </p>
         </header>
 
         <section>
-          <header>
+          <header class="mb-4">
             <h3>Without search (10 items)</h3>
+            <p class="text-caption">
+              - Shows only first 10 items.<br>
+              - For selects with more items we should always include search
+            </p>
           </header>
           <SelectV2
               :items="take(cities, 10)"
@@ -76,7 +85,7 @@ const createItem = (value: string) => {
         </section>
 
         <section>
-          <header>
+          <header class="mb-4">
             <h3>With search</h3>
           </header>
           <SelectV2
@@ -89,7 +98,7 @@ const createItem = (value: string) => {
         </section>
 
         <section>
-          <header>
+          <header class="mb-4">
             <h3>With search and create item</h3>
           </header>
 
@@ -105,14 +114,23 @@ const createItem = (value: string) => {
 
       </v-sheet>
 
+      <v-divider/>
+
       <v-sheet class="d-flex flex-column pa-2 ga-4">
-        <header>
+        <header class="mb-4">
           <h2>Multi</h2>
+          <p class="text-caption">
+            - Allows to select multiple items.<br>
+          </p>
         </header>
 
         <section>
-          <header>
-            <h3>Without search (10 items)</h3>
+          <header class="mb-4">
+            <h3>Without search</h3>
+            <p class="text-caption">
+              - Shows only first 10 items.<br>
+              - For selects with more items we should always include search
+            </p>
           </header>
           <SelectV2
               multiple
@@ -124,7 +142,7 @@ const createItem = (value: string) => {
         </section>
 
         <section>
-          <header>
+          <header class="mb-4">
             <h3>With search</h3>
           </header>
           <SelectV2
@@ -138,8 +156,11 @@ const createItem = (value: string) => {
         </section>
 
         <section>
-          <header>
+          <header class="mb-4">
             <h3>With search and create item</h3>
+            <p class="text-caption">
+              This example allows to add values that are not in the list
+            </p>
           </header>
 
           <SelectV2

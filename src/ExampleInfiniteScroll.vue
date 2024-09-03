@@ -36,7 +36,7 @@ const infiniteQuery = useInfiniteQuery({
 
 <template>
   <section>
-    <header>
+    <header class="mb-4">
       <h3>Infinite scroll </h3>
       <p class="text-caption">
         (delay 500ms)

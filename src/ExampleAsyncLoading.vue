@@ -55,7 +55,7 @@ const updateSearch = (value: string) => {
 
 <template>
   <section>
-    <header>
+    <header class="mb-4">
       <h3>Async search and create item </h3>
       <p class="text-caption">
         - Simulates search via api call (delay set to 2000ms).<br>
