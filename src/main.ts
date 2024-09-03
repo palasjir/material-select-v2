@@ -10,6 +10,7 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 
 // Components
 import App from "./App.vue";
+import { VueQueryPlugin } from '@tanstack/vue-query'
 
 const vuetify = createVuetify({
   components,
@@ -23,4 +24,4 @@ const vuetify = createVuetify({
   },
 });
 
-createApp(App).use(vuetify).mount("#app");
+createApp(App).use(vuetify).use(VueQueryPlugin).mount("#app");

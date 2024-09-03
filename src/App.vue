@@ -5,6 +5,8 @@ import {ref} from "vue";
 import {take} from "lodash";
 import {AsyncValue} from "./components/AsyncValue.ts";
 import {AsyncCreate} from "./components/AsyncCreate.ts";
+import {useInfiniteQuery} from "@tanstack/vue-query";
+import ExampleInfiniteScroll from "./ExampleInfiniteScroll.vue";
 
 const variant = ref('underlined')
 
@@ -40,6 +42,7 @@ const createItemAsync = new AsyncCreate<any>(async (value: string) => {
     }, 2000)
   });
 });
+
 
 </script>
 
@@ -146,6 +149,10 @@ const createItemAsync = new AsyncCreate<any>(async (value: string) => {
 
           <SelectV2 multiple :items="asyncItems" search-enabled creation-enabled :on-create="createItemAsync" :variant="variant"/>
         </section>
+
+
+        <ExampleInfiniteScroll :variant="variant" />
+
       </v-sheet>
 
       <!-- Adding some extra space so it's possible to scroll down to test menu placements. -->

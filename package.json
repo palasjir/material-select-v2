@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/vue-query": "^5.53.3",
+    "@tanstack/vue-virtual": "^3.10.6",
     "lodash": "^4.17.21",
     "uuid": "^10.0.0",
     "vue": "^3.4.38",
