@@ -1,27 +1,31 @@
 <script lang="ts" setup>
-import {onMounted, ref, defineEmits, onBeforeUnmount, inject} from "vue";
+import {onBeforeUnmount, onMounted, ref} from "vue";
+import {ComponentExposed} from 'vue-component-type-helpers';
 import {debounce} from 'lodash'
+import {OverflowingPayload, SelectItem} from "./types.ts";
+import {useSelectV2Store} from "./SelectV2Store.ts";
+import {VChip} from "vuetify/components";
 
 type State = 'unchecked' | 'overflowing' | 'ok';
 
-const chipRef = ref(null);
-const state = ref<State>('unchecked');
-
-const props = defineProps<{
+type Props = {
   index: number;
-  item: any;
+  item: SelectItem;
   bound: number;
-}>();
+};
 
 type Emits = {
   (e: "close", item: any): void;
-  (e: "overflowing", payload: { id: number; isOverflowing: boolean }): void;
+  (e: "overflowing", payload: OverflowingPayload): void;
 };
 
+const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-const {registerChip, unregisterChip} = inject('select-v2');
+const chipRef = ref<ComponentExposed<typeof VChip> | undefined>();
+const state = ref<State>('unchecked');
 
+const {registerChip, unregisterChip} = useSelectV2Store();
 
 const check = debounce(() => {
   const el = chipRef.value?.$el;
@@ -42,7 +46,6 @@ const check = debounce(() => {
   });
 }, 10);
 
-
 onMounted(() => {
   if (!chipRef.value) return;
   registerChip({id: props.item.id, api: {check}});
@@ -50,13 +53,16 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  unregisterChip(props.item.id);
-  emit("overflowing", {id: props.item.id, isOverflowing: false});
+  unregisterChip({id: props.item.id});
+  emit("overflowing", {
+    id: props.item.id,
+    isOverflowing: false
+  });
 });
 </script>
 
 <template>
-  <v-chip
+  <VChip
       class="flex-shrink-1"
       :class="{
           ok: state === 'ok',
@@ -76,7 +82,7 @@ onBeforeUnmount(() => {
         <div>{{ item.title }}</div>
       </v-tooltip>
     </template>
-  </v-chip>
+  </VChip>
 </template>
 
 <style lang="scss" scoped>

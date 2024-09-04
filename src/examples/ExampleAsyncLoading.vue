@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import SelectV2 from "./components/SelectV2.vue";
-import {useQuery} from "@tanstack/vue-query";
-import {AsyncCreate} from "./components/AsyncCreate.ts";
-import {cities} from "./components/cities.ts";
+import SelectV2 from "../components/SelectV2/SelectV2.vue";
+import {useMutation, useQuery} from "@tanstack/vue-query";
+import {cities} from "./cities.ts";
 import {take} from "lodash";
-import {computed, ref} from "vue";
+import {ref} from "vue";
+import {SelectItem} from "../components/SelectV2/types.ts";
 
 interface Props {
   variant: 'underlined' | 'outlined';
@@ -18,7 +18,7 @@ let counter = 10_000;
 const getItems = (search: string) => {
   return new Promise<any>((resolve) => {
     setTimeout(() => {
-      if(!search) {
+      if (!search) {
         return resolve(take(cities, 10));
       }
       const filtered = cities.filter(city => city.title.toLowerCase().includes(search.toLowerCase()));
@@ -30,21 +30,24 @@ const getItems = (search: string) => {
 const search = ref('')
 
 const asyncItems = useQuery({
-  queryKey: computed(() => ['cities', {search: search.value}]),
+  queryKey: ['cities', {search}],
   queryFn: async () => {
     return getItems(search.value);
   },
 });
 
-const createItemAsync = new AsyncCreate<any>(async (value: string) => {
-  const item = {id: counter, title: value};
-  counter += 1;
-  return new Promise<any>((resolve) => {
-    setTimeout(() => {
-      resolve(item);
-    }, 2000)
-  });
-});
+const createAsync = useMutation({
+  mutationKey: ['createItem'],
+  mutationFn: async (value: string) => {
+    const item: SelectItem = {id: counter, title: value};
+    counter += 1;
+    return new Promise<SelectItem>((resolve) => {
+      setTimeout(() => {
+        resolve(item);
+      }, 2000)
+    });
+  },
+})
 
 const updateSearch = (value: string) => {
   search.value = value;
@@ -69,7 +72,7 @@ const updateSearch = (value: string) => {
         :items="asyncItems"
         search-enabled
         creation-enabled
-        :on-create="createItemAsync"
+        :on-create="createAsync"
         :variant="variant"
         select-placeholder="Select cities ..."
         search-placeholder="Search cities ..."

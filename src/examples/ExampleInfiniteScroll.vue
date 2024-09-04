@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import SelectV2 from "./components/SelectV2.vue";
+import SelectV2 from "../components/SelectV2/SelectV2.vue";
 import {useInfiniteQuery} from "@tanstack/vue-query";
-import {cities} from "./components/cities.ts";
+import {cities} from "./cities.ts";
 
 interface Props {
   variant: 'underlined' | 'outlined';

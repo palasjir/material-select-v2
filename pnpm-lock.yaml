@@ -51,6 +51,9 @@ importers:
       vite:
         specifier: ^5.0.12
         version: 5.0.12(sass@1.77.8)
+      vue-component-type-helpers:
+        specifier: ^2.1.4
+        version: 2.1.4
       vue-tsc:
         specifier: ^1.8.27
         version: 1.8.27(typescript@5.3.3)
@@ -604,6 +607,9 @@ packages:
       terser:
         optional: true
 
+  vue-component-type-helpers@2.1.4:
+    resolution: {integrity: sha512-aVqB3KxwpM76cYRkpnezl1J62E/1omzHQfx1yuz7zcbxmzmP/PeSgI20NEmkdeGnjZPVzm0V9fB4ZyRu5BBj4A==}
+
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
     engines: {node: '>=12'}
@@ -1114,6 +1120,8 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
       sass: 1.77.8
+
+  vue-component-type-helpers@2.1.4: {}
 
   vue-demi@0.14.10(vue@3.4.38(typescript@5.3.3)):
     dependencies:

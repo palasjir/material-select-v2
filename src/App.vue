@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import SelectV2 from "./components/SelectV2.vue";
-import {cities} from "./components/cities";
+import SelectV2 from "./components/SelectV2/SelectV2.vue";
+import {cities} from "./examples/cities.ts";
 import {ref} from "vue";
 import {take} from "lodash";
-import ExampleInfiniteScroll from "./ExampleInfiniteScroll.vue";
-import ExampleAsyncLoading from "./ExampleAsyncLoading.vue";
+import ExampleInfiniteScroll from "./examples/ExampleInfiniteScroll.vue";
+import ExampleAsyncLoading from "./examples/ExampleAsyncLoading.vue";
 
 const variant = ref('underlined')
 
