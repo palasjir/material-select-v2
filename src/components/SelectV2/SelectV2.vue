@@ -8,6 +8,7 @@ import SelectV2Chip from "./SelectV2Chip.vue";
 import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
 import {AsyncQuery, CreateItemFn, InfiniteRecord, MutationQuery, OverflowingPayload, SelectItem} from "./types.ts";
 import {provideSelectV2Store} from "./SelectV2Store.ts";
+import SelectV2SingleChip from "./SelectV2SingleChip.vue";
 
 type Props = {
   id?: string;
@@ -327,12 +328,18 @@ onBeforeUnmount(() => {
     >
       <template #chip="{ index}">
         <SelectV2Chip
+            v-if="multiple"
             :bound="bound"
             :index="index"
             :item="selectedItems[index]"
             :select-width="width"
             @overflowing="handleChipOverflow"
             @close="removeSelectedItem"
+        />
+        <SelectV2SingleChip
+            v-else
+            :item="selectedItems[0]"
+            :select-width="width"
         />
       </template>
       <template #append-inner>
@@ -350,12 +357,12 @@ onBeforeUnmount(() => {
         :activator="`#${id}`"
         v-model="open"
         :offset="offset"
-        :width="width"
         :close-on-content-click="false"
         no-click-animation
         transition="none"
+        opacity="0.5"
     >
-      <VSheet ref="sheetRef" v-if="open" :elevation="1" rounded border>
+      <VSheet ref="sheetRef" v-if="open" :elevation="1" :width="width" rounded border>
         <VTextField
             v-if="searchEnabled"
             ref="textField"
