@@ -38,7 +38,7 @@ function isInfiniteQuery(x: any): x is InfiniteRecord {
 }
 
 function isMutationQuery(x: any): x is MutationQuery {
-  return 'mutate' in x;
+  return x && 'mutate' in x;
 }
 
 const props = withDefaults(
@@ -330,6 +330,7 @@ onBeforeUnmount(() => {
             :bound="bound"
             :index="index"
             :item="selectedItems[index]"
+            :select-width="width"
             @overflowing="handleChipOverflow"
             @close="removeSelectedItem"
         />
@@ -365,7 +366,7 @@ onBeforeUnmount(() => {
             hide-details
             @click.prevent.stop
             @keydown="searchKeyDown"
-            variant="underlined"
+            variant="plain"
             flat
             color="primary"
             :loading="loadingIndicator"

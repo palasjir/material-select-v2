@@ -12,6 +12,7 @@ type Props = {
   index: number;
   item: SelectItem;
   bound: number;
+  selectWidth: number;
 };
 
 type Emits = {
@@ -79,7 +80,7 @@ onBeforeUnmount(() => {
             {{ item.title }}
           </div>
         </template>
-        <div>{{ item.title }}</div>
+        <div :style="{maxWidth: `${selectWidth - 60}px`}">{{ item.title }}</div>
       </v-tooltip>
     </template>
   </VChip>
