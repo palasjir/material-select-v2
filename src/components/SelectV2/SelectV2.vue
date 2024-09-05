@@ -459,6 +459,14 @@ onBeforeUnmount(() => {
                   density="compact"
                   :data-index="index"
               >
+                <template #title>
+                  <v-tooltip location="top left" :open-delay="300" transition="none" :max-width="width - 80">
+                    <template #activator="{props: activatorProps}">
+                      <div class="text-truncate" v-bind="activatorProps">{{ item.title }}</div>
+                    </template>
+                    <div> {{ item.title }}</div>
+                  </v-tooltip>
+                </template>
                 <template #prepend>
                   <v-radio
                       class="mr-2"
