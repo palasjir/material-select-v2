@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
             v-if="searchEnabled"
             ref="textField"
             v-model="search"
-            class="mx-4 mb-3"
+            class="select-v2__text-field mx-4 mb-3"
             :placeholder="searchPlaceholder"
             density="comfortable"
             hide-details
@@ -378,6 +378,7 @@ onBeforeUnmount(() => {
           <template #default>
             <template v-if="creationEnabled">
               <VListItem
+                  class="select-v2__create-item"
                   :value="search"
                   :title="search"
                   :active="active === NEW_VALUE_INDEX"
@@ -395,7 +396,7 @@ onBeforeUnmount(() => {
                   </div>
                 </template>
                 <template #prepend>
-                  <div class="pl-1 mr-2 text-grey-darken-1">
+                  <div class="mr-2 text-grey-darken-1">
                     <v-icon icon="mdi-plus" density="compact" color="primary"/>
                   </div>
                 </template>
@@ -486,6 +487,14 @@ onBeforeUnmount(() => {
 
 .select-v2__select:deep(.v-field__input) {
   flex-wrap: nowrap;
+}
+
+.select-v2__text-field:deep(.v-field__prepend-inner) {
+  padding-left: 2px;
+}
+
+.select-v2__create-item:deep(.v-list-item__prepend) {
+  padding-left: 2px !important;
 }
 
 .selected {
