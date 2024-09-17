@@ -1,30 +1,21 @@
 <script lang="ts" setup>
-import {nextTick, ref} from "vue";
-import { ComponentExposed } from 'vue-component-type-helpers';
-import {VSheet, VMenu, VChip} from "vuetify/components";
+import {VChip, VMenu} from "vuetify/components";
 import SelectV2MoreChipsMenuList from "./SelectV2MoreChipsMenuList.vue";
 
 interface Props {
   count: number;
-  items: any[];
   width: number;
 }
 
-interface Emits {
-  (e: 'closeItem', item: any): void;
-}
+defineProps<Props>();
 
-const props = defineProps<Props>();
-defineEmits<Emits>();
-
-const sheetRef = ref<ComponentExposed<typeof VSheet> | undefined>();
 
 </script>
 
 <template>
   <VMenu open-on-hover transition="none" :close-on-content-click="false">
     <template #activator="{ props: activatorProps }">
-      <div v-bind="activatorProps">
+      <div class="__placeholder" v-bind="activatorProps">
         <VChip
             v-show="count"
             variant="tonal"
@@ -35,14 +26,15 @@ const sheetRef = ref<ComponentExposed<typeof VSheet> | undefined>();
         </VChip>
       </div>
     </template>
-
-    <VSheet ref="sheetRef" class="d-flex flex-column more-chips-menu">
-      <SelectV2MoreChipsMenuList :items="items" @closeItem="$emit('closeItem', $event)" :max-width="width"  />
-    </VSheet>
+    <SelectV2MoreChipsMenuList :max-width="width"  />
   </VMenu>
 </template>
 
 <style scoped>
+.__placeholder {
+  height: 24px;
+  width: 40px;
+}
 .more-chips-menu {
   transform: translateX(25px);
 }

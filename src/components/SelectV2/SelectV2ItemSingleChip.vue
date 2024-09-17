@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {VChip} from "vuetify/components";
+import {VChip, VTooltip} from "vuetify/components";
 import {SelectItem} from "./types.ts";
 
 interface Props {
@@ -17,18 +17,20 @@ defineProps<Props>();
       ref="chipRef"
   >
     <template #default>
-      <v-tooltip location="top left" :open-delay="300" transition="none">
+      <VTooltip location="top left" :open-delay="300" transition="none">
         <template #activator="{props: activatorProps}">
-          <div v-bind="activatorProps" class="select-chip text-truncate">
+          <div v-bind="activatorProps" class="select-chip select-chip--single text-truncate">
             {{ item.title }}
           </div>
         </template>
         <div :style="{maxWidth: `${selectWidth - 60}px`}">{{ item.title }}</div>
-      </v-tooltip>
+      </VTooltip>
     </template>
   </VChip>
 </template>
 
-<style scoped>
-
+<style lang="scss" scoped>
+:deep(.v-chip__underlay) {
+  background: transparent;
+}
 </style>

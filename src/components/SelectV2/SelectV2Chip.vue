@@ -4,7 +4,7 @@ import {ComponentExposed} from 'vue-component-type-helpers';
 import {debounce} from 'lodash'
 import {OverflowingPayload, SelectItem} from "./types.ts";
 import {useSelectV2Store} from "./SelectV2Store.ts";
-import {VChip} from "vuetify/components";
+import {VChip, VTooltip} from "vuetify/components";
 
 type State = 'unchecked' | 'overflowing' | 'ok';
 
@@ -26,7 +26,7 @@ const emit = defineEmits<Emits>();
 const chipRef = ref<ComponentExposed<typeof VChip> | undefined>();
 const state = ref<State>('unchecked');
 
-const {registerChip, unregisterChip} = useSelectV2Store();
+const {registerChip, unregisterChip, removeSelectedItem} = useSelectV2Store();
 
 const check = debounce(() => {
   const el = chipRef.value?.$el;
@@ -64,24 +64,25 @@ onBeforeUnmount(() => {
 
 <template>
   <VChip
+      ref="chipRef"
       class="flex-shrink-1"
       :class="{
           ok: state === 'ok',
           unchecked: state === 'unchecked',
           overflowing: state === 'overflowing',
       }"
-      closable ref="chipRef"
-      @click:close="$emit('close', item)"
+      closable
+      @click:close="removeSelectedItem(item)"
   >
     <template #default>
-      <v-tooltip location="top left" :open-delay="300" transition="none">
+      <VTooltip location="top left" :open-delay="300" transition="none">
         <template #activator="{props: activatorProps}">
           <div v-bind="activatorProps" class="select-chip text-truncate">
             {{ item.title }}
           </div>
         </template>
         <div :style="{maxWidth: `${selectWidth - 60}px`}">{{ item.title }}</div>
-      </v-tooltip>
+      </VTooltip>
     </template>
   </VChip>
 </template>

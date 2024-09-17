@@ -1,0 +1,1 @@
+export const NEW_VALUE_INDEX = -1;
