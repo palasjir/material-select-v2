@@ -179,7 +179,7 @@ const createItem = (value: string) => {
         <ExampleAsyncLoading :variant="variant"/>
 
 
-        <ExampleInfiniteScroll :variant="variant"/>
+<!--        <ExampleInfiniteScroll :variant="variant"/>-->
 
       </v-sheet>
 

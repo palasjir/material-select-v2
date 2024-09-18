@@ -1,7 +1,7 @@
 import {InfiniteData, UseInfiniteQueryReturnType, UseMutationReturnType, UseQueryReturnType} from "@tanstack/vue-query";
 
 export type SelectItem = {
-    id: number;
+    value: number;
     title: string;
 };
 

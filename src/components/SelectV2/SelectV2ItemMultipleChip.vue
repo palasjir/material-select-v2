@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref} from "vue";
+import {computed, onBeforeUnmount, onMounted, ref} from "vue";
 import {ComponentExposed} from 'vue-component-type-helpers';
 import {debounce} from 'lodash'
-import {OverflowingPayload, SelectItem} from "./types.ts";
+import {SelectItem} from "./types.ts";
 import {useSelectV2Store} from "./SelectV2Store.ts";
 import {VChip, VTooltip} from "vuetify/components";
 
@@ -11,52 +11,43 @@ type State = 'unchecked' | 'overflowing' | 'ok';
 type Props = {
   index: number;
   item: SelectItem;
-  bound: number;
-  selectWidth: number;
 };
-
-type Emits = {
-  (e: "close", item: any): void;
-  (e: "overflowing", payload: OverflowingPayload): void;
-};
-
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
-
 const chipRef = ref<ComponentExposed<typeof VChip> | undefined>();
 const state = ref<State>('unchecked');
 
-const {registerChip, unregisterChip, removeSelectedItem} = useSelectV2Store();
+const {registerChip, unregisterChip, removeSelectedItem, width, bound, setOverflowingChip} = useSelectV2Store();
+const maxWidth = computed(() => `${width.value - 60}px`);
 
 const check = debounce(() => {
   const el = chipRef.value?.$el;
   if (!el) {
-    emit("overflowing", {
-      id: props.item.id,
+    setOverflowingChip({
+      id: props.item.value,
       isOverflowing: false,
     });
     return;
   }
   const {right} = el.getBoundingClientRect();
-  const isOverflowing = right + 70 >= props.bound;
+  const isOverflowing = right + 70 >= bound.value;
   state.value = isOverflowing ? 'overflowing' : 'ok';
 
-  emit("overflowing", {
-    id: props.item.id,
+  setOverflowingChip({
+    id: props.item.value,
     isOverflowing,
   });
 }, 10);
 
 onMounted(() => {
   if (!chipRef.value) return;
-  registerChip({id: props.item.id, api: {check}});
+  registerChip({id: props.item.value, api: {check}});
   check();
 });
 
 onBeforeUnmount(() => {
-  unregisterChip({id: props.item.id});
-  emit("overflowing", {
-    id: props.item.id,
+  unregisterChip({id: props.item.value});
+  setOverflowingChip({
+    id: props.item.value,
     isOverflowing: false
   });
 });
@@ -65,7 +56,7 @@ onBeforeUnmount(() => {
 <template>
   <VChip
       ref="chipRef"
-      class="flex-shrink-1"
+      class="flex-shrink-1 mb-1"
       :class="{
           ok: state === 'ok',
           unchecked: state === 'unchecked',
@@ -75,13 +66,13 @@ onBeforeUnmount(() => {
       @click:close="removeSelectedItem(item)"
   >
     <template #default>
-      <VTooltip location="top left" :open-delay="300" transition="none">
+      <VTooltip location="top" :open-delay="300" transition="none" :max-width="maxWidth">
         <template #activator="{props: activatorProps}">
           <div v-bind="activatorProps" class="select-chip text-truncate">
             {{ item.title }}
           </div>
         </template>
-        <div :style="{maxWidth: `${selectWidth - 60}px`}">{{ item.title }}</div>
+        <div>{{ item.title }}</div>
       </VTooltip>
     </template>
   </VChip>

@@ -21,12 +21,13 @@
     "@types/lodash": "^4.17.7",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^4.6.2",
+    "@vue/language-server": "^2.1.6",
     "prettier": "^3.3.3",
     "sass": "^1.77.8",
-    "typescript": "^5.2.2",
+    "typescript": "^5.6.2",
     "vite": "^5.0.12",
     "vue-component-type-helpers": "^2.1.4",
-    "vue-tsc": "^1.8.27"
+    "vue-tsc": "^2.1.6"
   },
   "volta": {
     "node": "20.17.0"

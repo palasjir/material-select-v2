@@ -1,21 +1,20 @@
 <script lang="ts" setup>
 import {VChip, VTooltip} from "vuetify/components";
 import {SelectItem} from "./types.ts";
+import {useSelectV2Store} from "./SelectV2Store.ts";
+import {computed} from "vue";
 
 interface Props {
   item: SelectItem;
-  selectWidth: number;
 }
-
 defineProps<Props>();
 
+const {width} = useSelectV2Store();
+const maxWidth = computed(() => `${width.value - 60}px`);
 </script>
 
 <template>
-  <VChip
-      class="flex-shrink-1"
-      ref="chipRef"
-  >
+  <VChip class="flex-shrink-1" size="40px">
     <template #default>
       <VTooltip location="top left" :open-delay="300" transition="none">
         <template #activator="{props: activatorProps}">
@@ -23,7 +22,7 @@ defineProps<Props>();
             {{ item.title }}
           </div>
         </template>
-        <div :style="{maxWidth: `${selectWidth - 60}px`}">{{ item.title }}</div>
+        <div class="__title-tooltip">{{ item.title }}</div>
       </VTooltip>
     </template>
   </VChip>
@@ -32,5 +31,9 @@ defineProps<Props>();
 <style lang="scss" scoped>
 :deep(.v-chip__underlay) {
   background: transparent;
+}
+
+.__title-tooltip {
+  max-width: v-bind(maxWidth);
 }
 </style>

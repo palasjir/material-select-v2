@@ -1,0 +1,28 @@
+@supports selector(:focus-visible) {
+  // disable vuetify focus
+  .v-list-item::after {
+    border: none;
+    opacity: 0;
+  }
+  .v-list-item__overlay {
+    opacity: 0;
+  }
+}
+
+.select-list-item {
+  border: solid 2px transparent;
+  border-radius: 4px !important;
+}
+
+.select-list-item.v-list-item--active {
+  border-color: rgba(117, 117, 117, var(--v-medium-emphasis-opacity));
+}
+
+.select-list-item--selected.v-list-item--active {
+  border-color: currentColor;
+}
+
+.select-list-item--selected {
+  background: rgba(var(--v-theme-primary), 0.15);
+  color: rgba(var(--v-theme-primary), 0.83);
+}

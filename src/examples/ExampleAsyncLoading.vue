@@ -39,7 +39,7 @@ const asyncItems = useQuery({
 const createAsync = useMutation({
   mutationKey: ['createItem'],
   mutationFn: async (value: string) => {
-    const item: SelectItem = {id: counter, title: value};
+    const item: SelectItem = {value: counter, title: value};
     counter += 1;
     return new Promise<SelectItem>((resolve) => {
       setTimeout(() => {

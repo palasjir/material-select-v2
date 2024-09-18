@@ -14,12 +14,11 @@ const isSearchEmpty = computed(() => search.value === '');
 
 <template>
   <VListItem
-      class="select-v2__create-item"
+      class="select-list-item"
       :value="search"
       :title="search"
       :active="isActive"
-      @click="addItem"
-      density="compact"
+      @click.prevent="addItem"
       :data-index="-1"
       :disabled="isSearchEmpty"
   >
@@ -46,5 +45,5 @@ const isSearchEmpty = computed(() => search.value === '');
 </template>
 
 <style scoped>
-
+@import "./select-list-item.scss";
 </style>

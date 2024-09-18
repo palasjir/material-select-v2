@@ -1,19 +1,15 @@
 <script lang="ts" setup>
 import {VChip, VMenu} from "vuetify/components";
 import SelectV2MoreChipsMenuList from "./SelectV2MoreChipsMenuList.vue";
+import {computed} from "vue";
+import {useSelectV2Store} from "./SelectV2Store.ts";
 
-interface Props {
-  count: number;
-  width: number;
-}
-
-defineProps<Props>();
-
-
+const {overflowingChips} = useSelectV2Store();
+const count = computed(() => overflowingChips.value.size)
 </script>
 
 <template>
-  <VMenu open-on-hover transition="none" :close-on-content-click="false">
+  <VMenu open-on-hover transition="none" :disabled="count < 1" :close-on-content-click="false">
     <template #activator="{ props: activatorProps }">
       <div class="__placeholder" v-bind="activatorProps">
         <VChip
@@ -26,7 +22,7 @@ defineProps<Props>();
         </VChip>
       </div>
     </template>
-    <SelectV2MoreChipsMenuList :max-width="width"  />
+    <SelectV2MoreChipsMenuList  />
   </VMenu>
 </template>
 
@@ -34,8 +30,5 @@ defineProps<Props>();
 .__placeholder {
   height: 24px;
   width: 40px;
-}
-.more-chips-menu {
-  transform: translateX(25px);
 }
 </style>
