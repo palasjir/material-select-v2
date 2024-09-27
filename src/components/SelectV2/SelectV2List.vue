@@ -9,7 +9,6 @@ import {useVirtualizer} from "@tanstack/vue-virtual";
 import SelectV2ListItem from "./SelectV2ListItem.vue";
 
 interface Props {
-  creationEnabled: boolean | undefined;
   multiple: boolean | undefined;
   infinite: boolean | undefined;
 }
@@ -24,7 +23,12 @@ const options = computed(() => {
   return {
     count: filteredItems.value.length,
     getScrollElement: () => listRef.value,
-    estimateSize: () => 40,
+    estimateSize: (i) => {
+      if(filteredItems.value[i].type === 'category') {
+        return 32; // depends on visual style of category title, currently: 'text-overline'
+      }
+      return 40
+    },
     overscan: 5,
     paddingStart: isCreateItemVisible.value ? 40 : 0,
   };
@@ -48,10 +52,6 @@ const virtualRows = computed(() => {
 const totalSizePx = computed(() => {
   let totalSize = vList.value.getTotalSize();
 
-  if(isCreateItemVisible.value) {
-    totalSize += 40;
-  }
-
   if(filteredItems.value.length === 0) {
     totalSize += 40;
   }
@@ -66,8 +66,31 @@ const totalSizePx = computed(() => {
       <SelectV2CreateItem v-if="isCreateItemVisible"/>
 
       <SelectV2ListItem v-for="row in virtualRows" :key="row.index" :row="row">
-        <SelectV2MultipleItem v-if="multiple" :key="row.index" :index="row.index" :item="filteredItems[row.index]"/>
-         <SelectV2SingleItem  v-if="!multiple" :key="row.index" :index="row.index" :item="filteredItems[row.index]" />
+
+
+          <div v-if="filteredItems[row.index]?.type === 'category'" class="text-overline text-decoration-underline pl-4">
+            {{ filteredItems[row.index]?.title }}
+          </div>
+
+
+         <SelectV2MultipleItem
+             v-if="multiple && filteredItems[row.index]?.type ==='item'"
+             :key="row.index"
+             :index="row.index"
+             :item="filteredItems[row.index]"
+         />
+         <SelectV2SingleItem
+             v-if="!multiple && filteredItems[row.index]?.type ==='item'"
+             :key="row.index"
+             :index="row.index"
+             :item="filteredItems[row.index]"
+         />
+
+        <VListItem v-if="filteredItems[row.index]?.type ==='not-found'">
+          <template #title>
+            <i class="text-grey">No items matching the search found.</i>
+          </template>
+        </VListItem>
       </SelectV2ListItem>
 
 
@@ -84,23 +107,15 @@ const totalSizePx = computed(() => {
 <!--          </template>-->
 <!--        </VListItem>-->
 <!--      </template>-->
-
-      <template v-if="filteredItems.length === 0">
-        <VListItem>
-          <template #title>
-            <i class="text-grey">No items matching the search found.</i>
-          </template>
-        </VListItem>
-      </template>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-
 .list {
   overflow: auto;
-  max-height: 480px;
+  max-height: 320px; // To occupy 8 items of height 40px (value of 7 + 1 (create item) is based on psychology https://en.wikipedia.org/wiki/The_Magical_Number_Seven%2C_Plus_or_Minus_Two)
+  min-height: 40px;  // 40px item height
 }
 
 .list__inner {
@@ -108,5 +123,4 @@ const totalSizePx = computed(() => {
   position: relative;
   height: v-bind(totalSizePx);
 }
-
 </style>

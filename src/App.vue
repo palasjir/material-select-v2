@@ -11,7 +11,7 @@ const variant = ref('underlined')
 let counter = 10_000;
 
 const createItem = (value: string) => {
-  const item = {id: counter, title: value};
+  const item = {value: counter, title: value};
   counter += 1;
   return item;
 }
@@ -105,7 +105,7 @@ const createItem = (value: string) => {
           <SelectV2
               :items="cities"
               search-enabled
-              creation-enabled
+              :on-create="createItem"
               :variant="variant"
               select-placeholder="Select city ..."
               search-placeholder="Search city ..."

@@ -3,6 +3,7 @@ import {VListItem} from "vuetify/components";
 import {toRefs} from "vue";
 import {SelectItem} from "./types.ts";
 import {useSelectV2ListItem} from "./useSelectV2ListItem.ts";
+import SelectV2ListItemTitle from "./SelectV2ItemTitle.vue";
 
 interface Props {
   index: number;
@@ -16,12 +17,7 @@ const state = useSelectV2ListItem(toRefs(props));
 <template>
   <VListItem v-bind="state.props.value">
     <template #title>
-      <VTooltip location="top left" :open-delay="300" transition="none" :max-width="state.maxWidth.value">
-        <template #activator="{props: activatorProps}">
-          <div class="text-truncate" v-bind="activatorProps">{{ item.title }}</div>
-        </template>
-        <div> {{ item.title }}</div>
-      </VTooltip>
+      <SelectV2ListItemTitle :item="item" :state="state" />
     </template>
   </VListItem>
 </template>

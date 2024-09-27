@@ -16,7 +16,7 @@ const maxWidth = computed(() => `${width.value - 60}px`);
 <template>
   <VChip class="flex-shrink-1" size="40px">
     <template #default>
-      <VTooltip location="top left" :open-delay="300" transition="none">
+      <VTooltip location="top left" :open-delay="300" transition="none" :max-width="maxWidth">
         <template #activator="{props: activatorProps}">
           <div v-bind="activatorProps" class="select-chip select-chip--single text-truncate">
             {{ item.title }}

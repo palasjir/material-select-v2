@@ -11,15 +11,16 @@
 
 .select-list-item {
   border: solid 2px transparent;
-  border-radius: 4px !important;
 }
 
 .select-list-item.v-list-item--active {
   border-color: rgba(117, 117, 117, var(--v-medium-emphasis-opacity));
+  border-radius: 4px !important;
 }
 
 .select-list-item--selected.v-list-item--active {
   border-color: currentColor;
+  border-radius: 4px !important;
 }
 
 .select-list-item--selected {

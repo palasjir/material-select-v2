@@ -10,7 +10,7 @@ export interface ListItemDeps {
 
 export function useSelectV2ListItem(props: ListItemDeps) {
     const {
-        isItemSelected, isActiveItem, toggleItem, activeDown, activeUp, activeCycle, activeConfirm,
+        isItemSelected, isActiveItem, toggleItem, activeDown, activeUp, activeCycle, activeConfirm, removeItem,
         width,
     } = useSelectV2Store();
 
@@ -68,6 +68,10 @@ export function useSelectV2ListItem(props: ListItemDeps) {
         })
     };
 
+    const remove = () => {
+        removeItem(unref(props.item));
+    }
+
     // NOTE: It would be nice to have a ripple effect but since the issue with the click handler above the ripple effect is fired on wrong item and being really confusing
     const ripple = false;
 
@@ -83,5 +87,8 @@ export function useSelectV2ListItem(props: ListItemDeps) {
         isSelected,
         isActive,
         maxWidth,
+        remove,
     } as const;
 }
+
+export type SelectV2ListItemState = ReturnType<typeof useSelectV2ListItem>;

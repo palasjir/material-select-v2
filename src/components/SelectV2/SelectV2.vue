@@ -1,31 +1,41 @@
-<script lang="ts" setup>
+<script lang="ts" setup generic="T">
 import {v4} from "uuid";
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import {ComponentExposed} from 'vue-component-type-helpers';
-import {VList, VListItem, VMenu, VSelect, VSheet, VTextField} from "vuetify/components";
+import {VMenu, VSelect, VSheet, VTextField} from "vuetify/components";
 import SelectV2Chip from "./SelectV2ItemMultipleChip.vue";
 import SelectV2MoreChipsMenu from "./SelectV2MoreChipsMenu.vue";
-import {AsyncQuery, CreateItemFn, InfiniteRecord, MutationQuery, SelectItem} from "./types.ts";
+import {AsyncQuery, CreateItemFn, InfiniteRecord, SelectItem} from "./types.ts";
 import {provideSelectV2Store} from "./SelectV2Store.ts";
 import SelectV2SingleChip from "./SelectV2ItemSingleChip.vue";
-import {isInfiniteQuery} from "./utils.ts";
 import SelectV2List from "./SelectV2List.vue";
+import {debounce} from "lodash";
+import {useEventListener} from '@vueuse/core'
 
 type Props = {
   id?: string;
   multiple?: boolean;
+
+  /**
+   * Search for items is enabled: Default: true. We want to encourage usage of search.
+   */
   searchEnabled?: boolean;
 
   items:
-      SelectItem[] |
+      SelectItem<T>[] |
       AsyncQuery |
       InfiniteRecord;
 
+  /**
+   * Placeholder text in select
+   */
   selectPlaceholder: string;
+  /**
+   * Placeholder text in search
+   */
   searchPlaceholder: string;
 
-  creationEnabled?: boolean;
-  onCreate?: CreateItemFn | MutationQuery;
+  onCreate?: CreateItemFn;
 
   variant?: 'outlined' | 'underlined';
   infinite?: boolean;
@@ -40,7 +50,7 @@ const props = withDefaults(
     {
       id: () => `select-${v4()}`,
       multiple: false,
-      searchEnabled: false,
+      searchEnabled: true,
       variant: "underlined",
       infinite: false,
     }
@@ -66,21 +76,27 @@ const {
   creatingIndicator,
   updateDimensions,
   width,
-} = provideSelectV2Store(props, {
+} = provideSelectV2Store<T>(props, {
   onSearchUpdate: (value) => emit('update:search', value),
 });
 
-const id = ref<string>(props.id);
+let observer: ResizeObserver | undefined;
+let io: IntersectionObserver | undefined;
 
+const id = ref<string>(props.id);
 const menuRef = ref<ComponentExposed<typeof VMenu> | undefined>();
 const textFieldRef = ref<ComponentExposed<typeof VTextField> | undefined>();
 const sheetRef = ref<ComponentExposed<typeof VSheet> | undefined>();
-const infiniteLoaderRef = ref<ComponentExposed<typeof VListItem> | undefined>();
-const listRef = ref<ComponentExposed<typeof VList> | undefined>();
+
+const openedInDirection = ref<'down' | 'up' | undefined>('down');
 
 const offset = computed(() => {
   return props.variant === 'underlined' ? [5, 0] : [15, 15];
 });
+
+const location = computed(()=> {
+   return openedInDirection.value === 'up' ? 'top left' : 'bottom left';
+})
 
 const searchKeyDown = (event: KeyboardEvent) => {
   switch (event.key) {
@@ -115,40 +131,30 @@ const selectKeyDown = (event: KeyboardEvent) => {
   }
 };
 
-const setupInfiniteScroll = () => {
-  const _items = props.items;
-
-  if (props.infinite && isInfiniteQuery(_items)) {
-    const infiniteLoaderElement = infiniteLoaderRef.value?.$el as HTMLElement | undefined;
-    const listElement = listRef.value?.$el as HTMLElement | undefined;
-    if (infiniteLoaderElement && listElement) {
-      const ioOptions = {
-        root: listElement,
-        threshold: 0.4
-      }
-      const io = new IntersectionObserver((entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          _items.fetchNextPage();
-        }
-      }, ioOptions);
-      io.observe(infiniteLoaderElement)
-    }
-  }
-}
-
-watch(
-    () => textFieldRef.value,
-    async () => {
-      await nextTick();
-      const field = textFieldRef.value;
-      if (field) {
-        setTimeout(() => {
-          field.focus();
-        }, 200);
-      }
-    }
-);
+// not used keeping for reference for other potential uses
+// const infiniteLoaderRef = ref<ComponentExposed<typeof VListItem> | undefined>();
+// const listRef = ref<ComponentExposed<typeof VList> | undefined>();
+// const setupInfiniteScroll = () => {
+//   const _items = props.items;
+//
+//   if (props.infinite && isInfiniteQuery(_items)) {
+//     const infiniteLoaderElement = infiniteLoaderRef.value?.$el as HTMLElement | undefined;
+//     const listElement = listRef.value?.$el as HTMLElement | undefined;
+//     if (infiniteLoaderElement && listElement) {
+//       const ioOptions = {
+//         root: listElement,
+//         threshold: 0.4
+//       }
+//       const io = new IntersectionObserver((entries) => {
+//         const entry = entries[0];
+//         if (entry.isIntersecting) {
+//           _items.fetchNextPage();
+//         }
+//       }, ioOptions);
+//       io.observe(infiniteLoaderElement)
+//     }
+//   }
+// }
 
 // watch(isOpen, async (value) => {
 //   if (value) {
@@ -157,19 +163,63 @@ watch(
 //   }
 // });
 
+watch(
+    () => textFieldRef.value,
+    async () => {
+      await nextTick();
+      const field = textFieldRef.value;
+      if (field) {
+        setTimeout(() => {
+          field?.focus();
+        }, 200);
+      }
+    }
+);
+
+
+
 watch(active, (value) => {
   const parent = sheetRef.value?.$el;
   const el = parent?.querySelector(`[data-index="${value}"]`) as HTMLElement | undefined;
   el?.scrollIntoView({block: "nearest"});
 });
 
-let observer: ResizeObserver | undefined;
-let io: IntersectionObserver | undefined;
+const checkPopupPosition = debounce(async () => {
+  if(!isOpen.value) return;
+  let loopCounter = 0;
+  let {y: sheetTop} = sheetRef.value?.$el.getBoundingClientRect();
+  let {y: selectTop} = selectRef.value?.$el.getBoundingClientRect();
+
+  while (sheetTop < 0 && loopCounter < 10) {
+    await nextTick();
+    sheetTop = sheetRef.value?.$el.getBoundingClientRect()?.y ?? -1;
+    // just in case, prevent infinite loop if things go wrong somehow
+    loopCounter++;
+  }
+
+  // fixate the position of sheet
+  if (sheetTop < selectTop) {
+    openedInDirection.value = 'up';
+  } else {
+    openedInDirection.value = 'down';
+  }
+}, 5);
+
+watch(sheetRef, async (sheet) => {
+  if (sheet) {
+    await nextTick();
+    // check popup position with some delay
+    checkPopupPosition();
+  }
+})
+
+useEventListener('scroll', checkPopupPosition);
 
 onMounted(() => {
   const selectElement = selectRef.value?.$el as HTMLElement | undefined;
   if (selectElement) {
     updateDimensions();
+    updateOverflowingChips();
 
     const observer = new ResizeObserver(() => {
       updateDimensions();
@@ -213,10 +263,10 @@ onBeforeUnmount(() => {
             :index="index"
             :item="selectedItems[index]"
         />
-        <SelectV2SingleChip v-else :item="selectedItems[0]" />
+        <SelectV2SingleChip v-else :item="selectedItems[0]"/>
       </template>
       <template #append-inner>
-        <SelectV2MoreChipsMenu />
+        <SelectV2MoreChipsMenu/>
       </template>
     </VSelect>
 
@@ -228,10 +278,21 @@ onBeforeUnmount(() => {
         :close-on-content-click="false"
         no-click-animation
         transition="none"
+        :location="location"
         opacity="0.5"
         @update:model-value="setOpen"
     >
-      <VSheet ref="sheetRef" v-if="isOpen" :elevation="1" :width="width" rounded border>
+      <VSheet
+          v-if="isOpen"
+          ref="sheetRef" class="d-flex flex-column"
+          :class="{
+              'flex-column': openedInDirection === 'down',
+              'flex-column-reverse': openedInDirection === 'up'}"
+          :elevation="1"
+          :width="width"
+          rounded
+          border
+      >
         <VTextField
             v-if="searchEnabled"
             ref="textFieldRef"
@@ -253,11 +314,9 @@ onBeforeUnmount(() => {
         <VDivider/>
 
         <SelectV2List
-            :creation-enabled="creationEnabled"
             :infinite="infinite"
             :multiple="multiple"
         />
-
       </VSheet>
     </VMenu>
   </div>
