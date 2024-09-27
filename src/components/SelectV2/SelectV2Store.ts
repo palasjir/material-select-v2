@@ -25,7 +25,7 @@ export type SelectV2Store = {
     isCreateItemVisible: ComputedRef<boolean>;
     creationEnabled: Readonly<Ref<boolean>>;
 
-    selectedItemsSet: Ref<Map<SelectItem['value'], SelectItem>>;
+    selectedItemsMap: Ref<Map<SelectItem['value'], SelectItem>>;
     selectedItems: ComputedRef<SelectItem[]>;
     filteredItems: ComputedRef<FilteredSelectItem[]>;
 
@@ -391,17 +391,17 @@ export function createStore<T>(deps: SelectV2StoreDeps<T>, options?: SelectV2Sto
         }
     };
 
-    const setSearch = (value: string) => {
-        search.value = value;
-        activeReset();
-        debouncedSearch(value);
-    }
-
     const debouncedSearch = debounce((value: string) => {
         const _value = value ?? '';
         appliedSearch.value = _value;
         options?.onSearchUpdate?.(_value);
     }, 250);
+
+    const setSearch = (value: string) => {
+        search.value = value ?? '';
+        activeReset();
+        debouncedSearch(value);
+    }
 
     watch(minIndex, activeReset, {immediate: true, flush: 'pre'});
 
@@ -418,7 +418,7 @@ export function createStore<T>(deps: SelectV2StoreDeps<T>, options?: SelectV2Sto
         setOpen,
 
         creationEnabled,
-        selectedItemsSet: selectedItemsMap,
+        selectedItemsMap,
         selectedItems,
         filteredItems,
         registerChip,

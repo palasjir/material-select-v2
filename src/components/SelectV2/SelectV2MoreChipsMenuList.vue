@@ -4,7 +4,7 @@ import {computed, nextTick, onMounted, ref, watch} from "vue";
 import {useSelectV2Store} from "./SelectV2Store.ts";
 import {ComponentExposed} from "vue-component-type-helpers";
 
-const {removeSelectedItem, selectedItemsSet, width} = useSelectV2Store()
+const {removeSelectedItem, selectedItemsMap, width} = useSelectV2Store()
 
 const listRef = ref<HTMLElement | undefined>();
 const sheetRef = ref<ComponentExposed<typeof VSheet> | undefined>();
@@ -37,7 +37,7 @@ watch(width, () => {
   <VSheet ref="sheetRef" class="d-flex flex-column more-chips-menu">
     <div ref="listRef" class="d-flex flex-wrap align-start ga-2 pa-4 __inner-list">
       <VChip
-          v-for="[,selectedItem] in selectedItemsSet"
+          v-for="[,selectedItem] in selectedItemsMap"
           :key="selectedItem.value"
           class="flex-grow-0 align-self-start"
           closable
