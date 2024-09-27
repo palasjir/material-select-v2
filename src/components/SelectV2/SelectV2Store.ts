@@ -13,7 +13,7 @@ import {debounce, isFunction} from "lodash";
 import {FIRST_VALUE_INDEX, NEW_VALUE_INDEX} from "./constants.ts";
 import {VSelect} from "vuetify/components";
 
-type SelectV2Store = {
+export type SelectV2Store = {
     isOpen: Ref<boolean>;
     open: () => void;
     close: () => void;
@@ -59,9 +59,7 @@ type SelectV2Store = {
     setOverflowingChip({id, isOverflowing}: OverflowingPayload): void;
 }
 
-const STORE_KEY = Symbol('select-v2');
-
-type Deps<T> = {
+type SelectV2StoreDeps<T> = {
     multiple: boolean;
     items:
         SelectItem<T>[] |
@@ -70,18 +68,23 @@ type Deps<T> = {
     onCreate?: CreateItemFn<T>;
 }
 
-type Options = {
+type SelectV2StoreOptions = {
     onSearchUpdate?: (value: string) => void;
 }
 
-export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
+const STORE_KEY = Symbol('select-v2');
+
+export function createStore<T>(deps: SelectV2StoreDeps<T>, options?: SelectV2StoreOptions) {
     const creationEnabled = computed(() => deps.onCreate !== undefined);
     const minIndex = computed(() => creationEnabled.value ? NEW_VALUE_INDEX : FIRST_VALUE_INDEX);
 
     let lock = false;
     const selectRef = ref<VSelect | null>(null);
     const isOpen = ref<boolean>(false);
+    // search value reflecting state of text field input
     const search = ref<string>("");
+    // search value used for filtering (debounced from search)
+    const appliedSearch = ref<string>("");
     const selectedItemsMap = ref(new Map<SelectItem['value'], SelectItem>());
     const createdItemsMap = ref(new Map<SelectItem['value'], SelectItem>());
     const registeredChips = new Map<number, OverflowingChipApi>();
@@ -95,7 +98,7 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
     });
 
     const filteredItems = computed<FilteredSelectItem[]>(() => {
-        const searchValue = search.value.toLowerCase();
+        const searchValue = appliedSearch.value.toLowerCase();
 
         const unfilteredItems = deps.items ?? [];
         const _items: FilteredSelectItem[]  = [];
@@ -149,8 +152,8 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
             const _pages = unfilteredItems.data.value?.pages ?? [];
             const infiniteItems = _pages.flatMap((page) => page.items)
                 .filter((it) =>
-                it.title.toLowerCase().includes(searchValue)
-            )
+                    it.title.toLowerCase().includes(searchValue)
+                )
 
             notFound = infiniteItems.length === 0;
 
@@ -181,7 +184,7 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
     });
 
     const isMatchingCreatedItem = computed<boolean>(() => {
-        const _search = search.value;
+        const _search = appliedSearch.value;
         for (const [, item] of createdItemsMap.value) {
             if(item.title === _search) {
                 return true;
@@ -192,7 +195,7 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
 
     const isExactMatch = computed<boolean>(() => {
         const _items = filteredItems.value.filter(it => it.type === 'item');
-        return _items.length === 1 && search.value === _items[0]?.title;
+        return _items.length === 1 && appliedSearch.value === _items[0]?.title;
     })
 
     const isCreateItemVisible = computed(() => {
@@ -219,6 +222,7 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
 
     const reset = () => {
         search.value = "";
+        appliedSearch.value = '';
         activeReset();
     }
 
@@ -248,7 +252,7 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
     }
 
     const activeDown = (): number => {
-         let next = Math.min(filteredItems.value.length - 1, active.value + 1);
+        let next = Math.min(filteredItems.value.length - 1, active.value + 1);
         // skip over non value items
         while (filteredItems.value[next]?.type !== 'item' && next < filteredItems.value.length) {
             next++;
@@ -330,7 +334,7 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
         if(lock) return;
         lock = true;
         creatingIndicator.value = true;
-
+        debouncedSearch.flush();
         const title = search.value.trim();
         const _onCreate = deps.onCreate;
         if (title && _onCreate) {
@@ -351,10 +355,11 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
                 }
                 selectedItemsMap.value.set(item.value, _item);
             } else {
-               console.error('SelectV2: onCreate must return an object with value and title properties!');
+                console.error('SelectV2: onCreate must return an object with value and title properties!');
             }
 
             search.value = "";
+            appliedSearch.value = "";
         }
 
         lock = false;
@@ -390,11 +395,11 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
         search.value = value;
         activeReset();
         debouncedSearch(value);
-        options?.onSearchUpdate?.(value);
     }
 
     const debouncedSearch = debounce((value: string) => {
         const _value = value ?? '';
+        appliedSearch.value = _value;
         options?.onSearchUpdate?.(_value);
     }, 250);
 
@@ -446,8 +451,12 @@ export function provideSelectV2Store<T>(deps: Deps<T>, options?: Options) {
         setOverflowingChip,
     }
 
-    provide<SelectV2Store>(STORE_KEY, store);
+    return store;
+}
 
+export function provideSelectV2Store<T>(deps: SelectV2StoreDeps<T>, options?: SelectV2StoreOptions) {
+    const store = createStore<T>(deps, options);
+    provide<SelectV2Store>(STORE_KEY, store);
     return store;
 }
 
